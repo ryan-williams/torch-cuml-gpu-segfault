@@ -9,12 +9,12 @@ import click
 faulthandler.enable()
 
 
-@click.command('run.py', help='Repeatedly run a docker image, exiting on the first error', no_args_is_help=True)
+@click.command('run.py', help='Repeatedly run `entrypoint.sh`, either in Docker on or the host')
+@click.option('-d', '--docker-img', help="Run this docker image (assumed to have been built from this repo, with ENTRYPOINT `entrypoint.sh`")
 @click.option('-n', '--num-repetitions', 'n', default=30)
 @click.option('-x', '--exit-early', is_flag=True)
-@click.argument('img')
-def main(n, exit_early, img):
-    cmd = [ "docker", "run", "-it", "--rm", img ]
+def main(docker_img, n, exit_early):
+    cmd = [ "docker", "run", "-it", "--rm", docker_img ] if docker_img else [ "./entrypoint.sh" ]
     successes, failures = 0, 0
     for i in range(n):
         ii = "%02d" % (i + 1)

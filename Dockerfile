@@ -38,6 +38,7 @@ RUN mamba env update -n base -f environment.yml \
 
 COPY metaflow .metaflow
 COPY pipeline.py pipeline.py
+COPY entrypoint.sh entrypoint.sh
 
 ENV PYTHONFAULTHANDLER=1
-ENTRYPOINT [ "python", "-Xfaulthandler", "pipeline.py", "--quiet", "--metadata", "local", "--environment", "local", "--datastore", "local", "--event-logger", "nullSidecarLogger", "--monitor", "nullSidecarMonitor", "--datastore-root", "/src/.metaflow", "step", "start", "--run-id", "example_run_id", "--task-id", "1", "--input-paths", "example_run_id/_parameters/0", "--retry-count", "0", "--max-user-code-retries", "0", "--namespace", "user:user" ]
+ENTRYPOINT [ "./entrypoint.sh" ]

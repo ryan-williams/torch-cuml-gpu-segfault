@@ -71,10 +71,14 @@ The [`run.py`](run.py) script does something similar, but exits on the first fai
 run.py
 # Usage: run.py [OPTIONS] IMG
 #
-#   Repeatedly run a docker image, exiting on the first error
+#   Repeatedly run `entrypoint.sh`, either in Docker on or the host
 #
 # Options:
+#   -d, --docker-img TEXT          Run this docker image (assumed to have been
+#                                  built from this repo, with ENTRYPOINT
+#                                  `entrypoint.sh`
 #   -n, --num-repetitions INTEGER
+#   -x, --exit-early
 #   --help                         Show this message and exit.
 ```
 
