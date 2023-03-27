@@ -99,7 +99,7 @@ python run.py  # ✅ now everything succeeds!
 - Instantiates a [`cuml.neighbors.NearestNeighbors`] and fits it to `X`
 - Calls [`kneighbors`] on `X`
 
-Something about [this `import torch`][`import torch`] is side-effectful, and creates a condition where some cleanup process seg-faults while Metaflow is cleaning up the step. Presumably the data structures in question are instantiated by `cuml` (probably `cudf` DataFrames); if [the `nn.kneighbors` call](pipeline.py#L20-L21) is commented out, the segfault also goes away.  
+Something about [this `import torch`][`import torch`] is side-effectful, and creates a condition where some cleanup process seg-faults while Metaflow is cleaning up the step. Presumably the data structures in question are instantiated by `cuml` (probably `cudf` DataFrames); if [the `nn.kneighbors` call](pipeline.py#L21-L22) is commented out, the segfault also goes away.
 
 ### Minimizing the example <a id="minimizing"></a>
 This is as minimal of a repro as I've found for this issue, which initially manifested during a call to [`scanpy.preprocessing.neighbors`] on larger, private data, during a (larger) [`Metaflow`] pipeline run.
