@@ -1,0 +1,12 @@
+channels:
+  - pytorch
+  - rapidsai
+  - nvidia
+  - conda-forge
+dependencies:
+  - python==3.9.13
+  - cuml==22.06.01[build=cuda11_py39*]
+  - numpy==1.23.5
+  - pytorch==1.13.1
+  - pip:
+    - metaflow==2.8.1
