@@ -17,7 +17,7 @@ RUN wget -q "https://repo.anaconda.com/miniconda/Miniconda3-py39_4.12.0-Linux-x8
  && ln -s /opt/conda/etc/profile.d/conda.sh /etc/profile.d/conda.sh \
  && echo ". /opt/conda/etc/profile.d/conda.sh" >> ~/.bashrc \
  && echo "conda activate base" >> ~/.bashrc \
- && conda install -c conda-forge -y "conda=4.12.0" "python=3.9.13" "mamba=0.24.0" pip \
+ && conda install -c conda-forge -y conda=4.12.0 python=3.9.13 mamba=0.24.0 pip \
  && conda clean -afy
 
 WORKDIR src

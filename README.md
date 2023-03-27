@@ -15,12 +15,27 @@
 ## Reproduction steps <a id="repro"></a>
 
 ### Setup GPU instance <a id="setup"></a>
-TODO setup EC2 `p3.2xlarge` instance (or other suitable GPU instance)
+TODO: document setting up EC2 `p3.2xlarge` instance (or another suitable GPU instance)
+
+```bash
+conda install -c conda-forge -y conda=4.12.0 python=3.9.13 mamba=0.24.0 pip
+export PATH="/opt/conda/bin:$PATH"
+```
 
 ### Reproduce in Docker <a id="docker"></a>
 
 #### 0. Setup Docker + nvidia runtime <a id="docker-nvidia"></a>
-TODO
+```bash
+# Set "default-runtime": "nvidia" in /etc/docker/daemon.json
+n=daemon.json
+f=/etc/docker/$n
+sudo cp $f $f.bak
+sudo cat $f | jq '."default-runtime" = "nvidia"' > $n
+sudo cp $n $f
+echo "Updated $f:"
+cat $f
+sudo systemctl restart docker
+```
 
 #### 1. Build Docker image <a id="build-docker"></a>
 ```bash
@@ -66,9 +81,19 @@ See [Dockerfile](Dockerfile). It has an `ENTRYPOINT` that invokes [pipeline.py],
 ```
 
 ### Reproduce on host <a id="host"></a>
-TODO:
+
+#### Setup
 ```bash
-mamba env update -n segfault -f environment.yml
+conda config --set channel_priority flexible
+mamba env update -y -n segfault -f environment.yml
+conda init bash
+. ~/.bashrc
+conda activate segfault
+```
+
+#### Run
+```bash
+run.py | grep iteration
 ```
 
 ## Discussion <a id="discussion"></a>
