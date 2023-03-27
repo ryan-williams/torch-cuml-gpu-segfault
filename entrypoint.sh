@@ -9,7 +9,7 @@ python \
     --datastore local \
     --event-logger nullSidecarLogger \
     --monitor nullSidecarMonitor \
-    --datastore-root $PWD/.metaflow \
+    --datastore-root $PWD/.metaflow-example \
     step \
     start \
     --run-id example_run_id \

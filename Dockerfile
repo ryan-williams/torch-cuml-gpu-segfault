@@ -36,7 +36,7 @@ COPY environment.yml environment.yml
 RUN mamba env update -n base -f environment.yml \
  && mamba clean -afy
 
-COPY metaflow .metaflow
+COPY .metaflow-example .metaflow-example
 COPY pipeline.py pipeline.py
 COPY entrypoint.sh entrypoint.sh
 
