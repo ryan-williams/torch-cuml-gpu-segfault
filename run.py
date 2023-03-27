@@ -14,7 +14,7 @@ faulthandler.enable()
 @click.option('-n', '--num-repetitions', 'n', default=30)
 @click.option('-x', '--exit-early', is_flag=True)
 def main(docker_img, n, exit_early):
-    cmd = [ "docker", "run", "-it", "--rm", docker_img ] if docker_img else [ "./entrypoint.sh" ]
+    cmd = [ "docker", "run", "-it", "--rm", "--runtime", "nvidia", docker_img ] if docker_img else [ "./entrypoint.sh" ]
     fmt = f"%0{len(str(n))}d"
     successes, failures = 0, 0
     for i in range(n):

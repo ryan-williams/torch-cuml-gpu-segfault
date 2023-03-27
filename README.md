@@ -3,19 +3,21 @@
 - [Reproduction steps](#repro)
   - [Setup GPU instance](#setup)
   - [Reproduce in Docker](#docker)
-    - [0. Setup Docker + nvidia runtime](#docker-nvidia)
     - [1. Build Docker image](#build-docker)
     - [2. Run image repeatedly, observe occasional segfaults](#run-docker)
   - [Reproduce on host](#host)
+    - [1. Setup, install dependencies](#setup-host)
+    - [2. Run `pipeline.py` repeatedly, observe occasional segfaults](#run-host)
 - [Discussion](#discussion)
   - [Removing unused `import torch` fixes it](#import)
   - [Minimizing the example](#minimizing)
   - [Python `faulthandler` not working](#faulthandler)
+  - [Appendix: set Docker `"default-runtime": "nvidia"`](#docker-nvidia)
 
 ## Reproduction steps <a id="repro"></a>
 
 ### Setup GPU instance <a id="setup"></a>
-TODO: document setting up EC2 `p3.2xlarge` instance (or another suitable GPU instance)
+TODO: document setting up EC2 `p3.2xlarge` instance (or another suitable GPU instance), with CUDA 11.6 driver and libraries.
 
 ```bash
 conda install -c conda-forge -y conda=4.12.0 python=3.9.13 mamba=0.24.0 pip
@@ -23,19 +25,6 @@ export PATH="/opt/conda/bin:$PATH"
 ```
 
 ### Reproduce in Docker <a id="docker"></a>
-
-#### 0. Setup Docker + nvidia runtime <a id="docker-nvidia"></a>
-```bash
-# Set "default-runtime": "nvidia" in /etc/docker/daemon.json
-n=daemon.json
-f=/etc/docker/$n
-sudo cp $f $f.bak
-sudo cat $f | jq '."default-runtime" = "nvidia"' > $n
-sudo cp $n $f
-echo "Updated $f:"
-cat $f
-sudo systemctl restart docker
-```
 
 #### 1. Build Docker image <a id="build-docker"></a>
 ```bash
@@ -82,7 +71,7 @@ See [Dockerfile](Dockerfile). It has an `ENTRYPOINT` that invokes [pipeline.py],
 
 ### Reproduce on host <a id="host"></a>
 
-#### Setup
+#### 1. Setup, install dependencies <a id="setup-host"></a>
 ```bash
 conda config --set channel_priority flexible
 mamba env update -y -n segfault -f environment.yml
@@ -91,7 +80,7 @@ conda init bash
 conda activate segfault
 ```
 
-#### Run
+#### 2. Run `pipeline.py` repeatedly, observe occasional segfaults <a id="run-host"></a>
 ```bash
 run.py | grep iteration
 ```
@@ -129,6 +118,22 @@ I've also tried to reduce dependencies and update versions of what remains (see 
 ### Python `faulthandler` not working <a id="faulthandler"></a>
 I've tried to enable a more detailed stack trace from the segfault in a few places ([Dockerfile#L4](Dockerfile#L4), [entrypoint.sh#L4](entrypoint.sh#L4), [pipeline.py#L7](pipeline.py#L7)), per [these instructions][segfault debug article], but have so far been unable to get any more info about where it is occurring.
 
+### Appendix: set Docker `"default-runtime": "nvidia"` <a id="docker-nvidia"></a>
+[`run.py`] (used in [the docker run instructions above](#run-docker) passes `--runtime nvidia` to the `docker run` command it runs. For running/testing yourself, you may prefer to set the `nvidia` Docker runtime as the default:
+
+```bash
+# Set "default-runtime": "nvidia" in /etc/docker/daemon.json
+n=daemon.json
+f=/etc/docker/$n
+sudo cp $f $f.bak
+sudo cat $f | jq '."default-runtime" = "nvidia"' > $n
+sudo cp $n $f
+echo "Updated $f:"
+cat $f
+sudo systemctl restart docker
+```
+
+
 
 [`scanpy.preprocessing.neighbors`]: https://github.com/scverse/scanpy/blob/1.8.2/scanpy/neighbors/__init__.py#L52
 [`scanpy.neighbors.compute_neighbors_rapids`]: https://github.com/scverse/scanpy/blob/1.8.2/scanpy/neighbors/__init__.py#L318
@@ -139,3 +144,4 @@ I've tried to enable a more detailed stack trace from the segfault in a few plac
 [`import torch`]: pipeline.py#L14
 [pipeline.py]: pipeline.py
 [segfault debug article]: https://blog.richard.do/2018/03/18/how-to-debug-segmentation-fault-in-python/
+[`run.py`]: run.py
