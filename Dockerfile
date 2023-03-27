@@ -1,11 +1,7 @@
-ARG CUDA_VERSION_FULL=11.6.1
-FROM nvidia/cuda:$CUDA_VERSION_FULL-base-ubuntu20.04
+ARG CUDA_VERSION=11.6.1
+FROM nvidia/cuda:${CUDA_VERSION}-base-ubuntu20.04
 
-ENV TZ=America/New_York DEBIAN_FRONTEND=noninteractive USERNAME=user
-
-ARG CUDA_VERSION_MINOR=11.6
-ARG CUDA_VERSION_FULL=11.6.1
-ENV CUDA_VERSION_MINOR=$CUDA_VERSION_MINOR CUDA_VERSION_FULL=$CUDA_VERSION_FULL
+ENV DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update \
  && apt-get install -y g++ wget \
@@ -13,22 +9,16 @@ RUN apt-get update \
 
 WORKDIR ..
 
-ENV CONDA_PIP=/opt/conda/bin/pip
-ENV CONDA_HOME="/opt/conda"
-ENV PATH="$CONDA_HOME/bin:$PATH"
+ENV PYTHONFAULTHANDLER=1 USERNAME=user PATH="/opt/conda/bin:$PATH"
 
-ARG PYTHON_VERSION_SHORT=39
-ARG PYTHON_VERSION_FULL=3.9.13
-ARG CONDA_VERSION=4.12.0
-ARG MAMBA_VERSION=0.24.0
-RUN wget -q "https://repo.anaconda.com/miniconda/Miniconda3-py${PYTHON_VERSION_SHORT}_${CONDA_VERSION}-Linux-x86_64.sh" -O ~/miniconda.sh \
+RUN wget -q "https://repo.anaconda.com/miniconda/Miniconda3-py39_4.12.0-Linux-x86_64.sh" -O ~/miniconda.sh \
  && /bin/bash ~/miniconda.sh -b -p /opt/conda \
  && rm ~/miniconda.sh \
  && ln -s /opt/conda/etc/profile.d/conda.sh /etc/profile.d/conda.sh \
  && echo ". /opt/conda/etc/profile.d/conda.sh" >> ~/.bashrc \
  && echo "conda activate base" >> ~/.bashrc \
- && /opt/conda/bin/conda install -c conda-forge -y "conda=${CONDA_VERSION}" "python=${PYTHON_VERSION_FULL}" "mamba=${MAMBA_VERSION}" pip \
- && /opt/conda/bin/conda clean -afy
+ && conda install -c conda-forge -y "conda=4.12.0" "python=3.9.13" "mamba=0.24.0" pip \
+ && conda clean -afy
 
 WORKDIR src
 
@@ -40,5 +30,4 @@ COPY .metaflow-example .metaflow-example
 COPY pipeline.py pipeline.py
 COPY entrypoint.sh entrypoint.sh
 
-ENV PYTHONFAULTHANDLER=1
 ENTRYPOINT [ "./entrypoint.sh" ]
