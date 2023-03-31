@@ -19,9 +19,28 @@
 ### Setup GPU instance <a id="setup"></a>
 TODO: document setting up EC2 `p3.2xlarge` instance (or another suitable GPU instance), with CUDA 11.6 driver and libraries.
 
+<details><summary>Install/Update Conda/Mamba</summary>
+
 ```bash
-conda install -c conda-forge -y conda=4.12.0 python=3.9.13 mamba=0.24.0 pip
-export PATH="/opt/conda/bin:$PATH"
+d=~/miniconda
+wget -q "https://repo.anaconda.com/miniconda/Miniconda3-py39_23.1.0-1-Linux-x86_64.sh" -O ~/miniconda.sh && \
+/bin/bash ~/miniconda.sh -b -p $d && \
+rm ~/miniconda.sh && \
+echo ". $d/etc/profile.d/conda.sh" >> ~/.bashrc && \
+echo "conda activate base" >> ~/.bashrc && \
+. ~/.bashrc && \
+conda --version && \
+conda install -y -n base conda-libmamba-solver && \
+conda config --set solver libmamba && \
+conda env update -n segfault python==3.9.13 pip && \
+pip install click
+```
+</details>
+
+Clone this repo:
+```bash
+git clone git@github.com:ryan-williams/torch-cuml-metaflow-gpu-segfault.git gpu-segfault
+cd gpu-segfault
 ```
 
 ### Reproduce in Docker <a id="docker"></a>
@@ -73,7 +92,6 @@ See [Dockerfile](Dockerfile). It has an `ENTRYPOINT` that invokes [pipeline.py],
 
 #### 1. Setup, install dependencies <a id="setup-host"></a>
 ```bash
-conda config --set channel_priority flexible
 mamba env update -y -n segfault -f environment.yml
 conda init bash
 . ~/.bashrc
