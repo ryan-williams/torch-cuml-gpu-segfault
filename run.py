@@ -19,11 +19,12 @@ def main(docker_img, n, quiet, exit_early):
     call_kwargs = dict(stdout=DEVNULL, stderr=DEVNULL) if quiet else dict()
     fmt = f"%0{len(str(n))}d"
     successes, failures = 0, 0
+    log = lambda msg: None if quiet else print
     for i in range(n):
         ii = fmt % (i + 1)
-        print(f"Iteration {ii}/{n}")
+        log(f"Iteration {ii}/{n}")
         try:
-            print(f"Running: {shlex.join(cmd)}")
+            log(f"Running: {shlex.join(cmd)}")
             check_call(cmd, **call_kwargs)
             print(f"✅ Success (iteration {ii}/{n})")
             successes += 1
@@ -31,7 +32,7 @@ def main(docker_img, n, quiet, exit_early):
             if e.returncode == 139:  # segfault
                 docker_msg = ' in Docker' if docker_img else ''
                 print(f"❌ Failure (iteration {ii}/{n}): exit code {e.returncode} (segfault{docker_msg})")
-                print(f"{e}")
+                log(f"{e}")
                 if exit_early:
                     raise
                 failures += 1

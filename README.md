@@ -222,7 +222,7 @@ See [Dockerfile](Dockerfile). It has an `ENTRYPOINT` that invokes [`pipeline.py`
 
 #### 2. Run image repeatedly, observe occasional segfaults <a id="run-docker"></a>
 ```bash
-./run.py -d $img | grep iteration
+./run.py -d $img -q | grep iteration
 # ✅ Success (iteration 01/30)
 # ✅ Success (iteration 02/30)
 # ✅ Success (iteration 03/30)
