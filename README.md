@@ -2,24 +2,148 @@
 
 - [Reproduction steps](#repro)
   - [Setup GPU instance](#setup)
+    - [Install miniconda with `libmamba-solver`](#install-miniconda)
+    - [Clone this repo](#clone-repo)
+  - [Reproduce on host](#host)
+    - [1. Create conda env with necessary dependencies](#setup-host)
+    - [2. Run [`pipeline.py`] repeatedly, observe occasional segfaults](#run-host)
   - [Reproduce in Docker](#docker)
     - [1. Build Docker image](#build-docker)
     - [2. Run image repeatedly, observe occasional segfaults](#run-docker)
-  - [Reproduce on host](#host)
-    - [1. Setup, install dependencies](#setup-host)
-    - [2. Run `pipeline.py` repeatedly, observe occasional segfaults](#run-host)
 - [Discussion](#discussion)
   - [Removing unused `import torch` fixes it](#import)
   - [Minimizing the example](#minimizing)
   - [Python `faulthandler` not working](#faulthandler)
-  - [Appendix: set Docker `"default-runtime": "nvidia"`](#docker-nvidia)
 
 ## Reproduction steps <a id="repro"></a>
 
 ### Setup GPU instance <a id="setup"></a>
-TODO: document setting up EC2 `p3.2xlarge` instance (or another suitable GPU instance), with CUDA 11.6 driver and libraries.
+I've tested this on EC2 `p3.2xlarge` instances, with a few versions of [Amazon's "Deep Learning AMI (Amazon Linux 2)"][DLAMI versions]:
+- Version 57.1 (`ami-01dfbf223bd1b9835`)
+- Version 61.3 (`ami-0ac44af394b7d6689`)
+- Version 69.1 (`ami-058e8127e717f752b`)
 
-<details><summary>Install/Update Conda/Mamba</summary>
+<details><summary>AMI details</summary>
+
+```bash
+aws ec2 describe-images --image-ids ami-058e8127e717f752b ami-0ac44af394b7d6689 ami-01dfbf223bd1b9835 | jq '.Images | sort_by(.Name)'
+```
+```json
+[
+  {
+    "Architecture": "x86_64",
+    "CreationDate": "2022-02-11T19:00:37.000Z",
+    "ImageId": "ami-01dfbf223bd1b9835",
+    "ImageLocation": "amazon/Deep Learning AMI (Amazon Linux 2) Version 57.1",
+    "ImageType": "machine",
+    "Public": true,
+    "OwnerId": "898082745236",
+    "PlatformDetails": "Linux/UNIX",
+    "UsageOperation": "RunInstances",
+    "State": "available",
+    "BlockDeviceMappings": [
+      {
+        "DeviceName": "/dev/xvda",
+        "Ebs": {
+          "DeleteOnTermination": true,
+          "SnapshotId": "snap-06a454c8994b48c9b",
+          "VolumeSize": 130,
+          "VolumeType": "gp2",
+          "Encrypted": false
+        }
+      }
+    ],
+    "Description": "MXNet-1.8, TensorFlow-2.7, PyTorch-1.10, Neuron, & others. NVIDIA CUDA, cuDNN, NCCL, Intel MKL-DNN, Docker, NVIDIA-Docker & EFA support. For fully managed experience, check: https://aws.amazon.com/sagemaker",
+    "EnaSupport": true,
+    "Hypervisor": "xen",
+    "ImageOwnerAlias": "amazon",
+    "Name": "Deep Learning AMI (Amazon Linux 2) Version 57.1",
+    "RootDeviceName": "/dev/xvda",
+    "RootDeviceType": "ebs",
+    "SriovNetSupport": "simple",
+    "VirtualizationType": "hvm",
+    "DeprecationTime": "2024-02-11T19:00:37.000Z"
+  },
+  {
+    "Architecture": "x86_64",
+    "CreationDate": "2022-05-25T10:13:50.000Z",
+    "ImageId": "ami-0ac44af394b7d6689",
+    "ImageLocation": "amazon/Deep Learning AMI (Amazon Linux 2) Version 61.3",
+    "ImageType": "machine",
+    "Public": true,
+    "OwnerId": "898082745236",
+    "PlatformDetails": "Linux/UNIX",
+    "UsageOperation": "RunInstances",
+    "State": "available",
+    "BlockDeviceMappings": [
+      {
+        "DeviceName": "/dev/xvda",
+        "Ebs": {
+          "DeleteOnTermination": true,
+          "Iops": 3000,
+          "SnapshotId": "snap-0c9f58769e1e40147",
+          "VolumeSize": 140,
+          "VolumeType": "gp3",
+          "Throughput": 125,
+          "Encrypted": false
+        }
+      }
+    ],
+    "Description": "MXNet-1.8, TensorFlow-2.7, PyTorch-1.10, Neuron, & others. NVIDIA CUDA, cuDNN, NCCL, Intel MKL-DNN, Docker, NVIDIA-Docker & EFA support. For fully managed experience, check: https://aws.amazon.com/sagemaker",
+    "EnaSupport": true,
+    "Hypervisor": "xen",
+    "ImageOwnerAlias": "amazon",
+    "Name": "Deep Learning AMI (Amazon Linux 2) Version 61.3",
+    "RootDeviceName": "/dev/xvda",
+    "RootDeviceType": "ebs",
+    "SriovNetSupport": "simple",
+    "VirtualizationType": "hvm",
+    "DeprecationTime": "2024-05-24T10:14:00.000Z"
+  },
+  {
+    "Architecture": "x86_64",
+    "CreationDate": "2022-12-28T10:56:57.000Z",
+    "ImageId": "ami-058e8127e717f752b",
+    "ImageLocation": "amazon/Deep Learning AMI (Amazon Linux 2) Version 69.1",
+    "ImageType": "machine",
+    "Public": true,
+    "OwnerId": "898082745236",
+    "PlatformDetails": "Linux/UNIX",
+    "UsageOperation": "RunInstances",
+    "State": "available",
+    "BlockDeviceMappings": [
+      {
+        "DeviceName": "/dev/xvda",
+        "Ebs": {
+          "DeleteOnTermination": true,
+          "Iops": 3000,
+          "SnapshotId": "snap-03c5960cd84e5cfbc",
+          "VolumeSize": 130,
+          "VolumeType": "gp3",
+          "Throughput": 125,
+          "Encrypted": false
+        }
+      }
+    ],
+    "Description": "PyTorch-1.13, TensorFlow-2.11, MXNet-1.9, Neuron, & others. NVIDIA CUDA, cuDNN, NCCL, Intel MKL-DNN, Docker, NVIDIA-Docker & EFA support. For fully managed experience, check: https://aws.amazon.com/sagemaker",
+    "EnaSupport": true,
+    "Hypervisor": "xen",
+    "ImageOwnerAlias": "amazon",
+    "Name": "Deep Learning AMI (Amazon Linux 2) Version 69.1",
+    "RootDeviceName": "/dev/xvda",
+    "RootDeviceType": "ebs",
+    "SriovNetSupport": "simple",
+    "VirtualizationType": "hvm",
+    "DeprecationTime": "2024-12-28T10:56:57.000Z"
+  }
+]
+```
+</details>
+
+TODO: complete set of `aws` commands (or Terraform template) to stand up such a node. In a fresh AWS account, I had to request a quota increase to 8 vCPUs for P-class instances.
+
+#### Install miniconda with `libmamba-solver` <a id="install-miniconda"></a>
+A recent Conda with the libmamba-solver is the quickest way to get [`environment.yml`] installed:
 
 ```bash
 d=~/miniconda
@@ -31,16 +155,59 @@ echo "conda activate base" >> ~/.bashrc && \
 . ~/.bashrc && \
 conda --version && \
 conda install -y -n base conda-libmamba-solver && \
-conda config --set solver libmamba && \
-conda env update -n segfault python==3.9.13 pip && \
-pip install click
+conda config --set solver libmamba
 ```
-</details>
 
-Clone this repo:
+#### Clone this repo <a id="clone-repo"></a>
 ```bash
 git clone git@github.com:ryan-williams/torch-cuml-metaflow-gpu-segfault.git gpu-segfault
 cd gpu-segfault
+```
+
+### Reproduce on host <a id="host"></a>
+
+#### 1. Create conda env with necessary dependencies <a id="setup-host"></a>
+```bash
+conda env update -y -n segfault -f environment.yml
+conda activate segfault
+```
+
+(see [`environment.yml`])
+
+#### 2. Run [`pipeline.py`] repeatedly, observe occasional segfaults <a id="run-host"></a>
+```bash
+run.py -q
+# ✅ Success (iteration 01/30)
+# ❌ Failure (iteration 02/30): exit code 139 (segfault)
+# ✅ Success (iteration 03/30)
+# ✅ Success (iteration 04/30)
+# ✅ Success (iteration 05/30)
+# ✅ Success (iteration 06/30)
+# ✅ Success (iteration 07/30)
+# ✅ Success (iteration 08/30)
+# ✅ Success (iteration 09/30)
+# ❌ Failure (iteration 10/30): exit code 139 (segfault)
+# ✅ Success (iteration 11/30)
+# ✅ Success (iteration 12/30)
+# ✅ Success (iteration 13/30)
+# ✅ Success (iteration 14/30)
+# ✅ Success (iteration 15/30)
+# ✅ Success (iteration 16/30)
+# ✅ Success (iteration 17/30)
+# ✅ Success (iteration 18/30)
+# ✅ Success (iteration 19/30)
+# ✅ Success (iteration 20/30)
+# ❌ Failure (iteration 21/30): exit code 139 (segfault)
+# ✅ Success (iteration 22/30)
+# ✅ Success (iteration 23/30)
+# ✅ Success (iteration 24/30)
+# ✅ Success (iteration 25/30)
+# ✅ Success (iteration 26/30)
+# ✅ Success (iteration 27/30)
+# ✅ Success (iteration 28/30)
+# ✅ Success (iteration 29/30)
+# ✅ Success (iteration 30/30)
+❌ 3/30 runs failed (10.0%)
 ```
 
 ### Reproduce in Docker <a id="docker"></a>
@@ -51,7 +218,7 @@ img=segfault
 docker build -t$img .
 ```
 
-See [Dockerfile](Dockerfile). It has an `ENTRYPOINT` that invokes [pipeline.py], which imports `torch` and then runs a `cuml` nearest-neighbors function.
+See [Dockerfile](Dockerfile). It has an `ENTRYPOINT` that invokes [`pipeline.py`], which imports `torch` and then runs a `cuml` nearest-neighbors function.
 
 #### 2. Run image repeatedly, observe occasional segfaults <a id="run-docker"></a>
 ```bash
@@ -59,7 +226,7 @@ See [Dockerfile](Dockerfile). It has an `ENTRYPOINT` that invokes [pipeline.py],
 # ✅ Success (iteration 01/30)
 # ✅ Success (iteration 02/30)
 # ✅ Success (iteration 03/30)
-# ❌ Failure (iteration 04/30); exit code 139 (segfault in Docker)
+# ❌ Failure (iteration 04/30): exit code 139 (segfault in Docker)
 # ✅ Success (iteration 05/30)
 # ✅ Success (iteration 06/30)
 # ✅ Success (iteration 07/30)
@@ -76,9 +243,9 @@ See [Dockerfile](Dockerfile). It has an `ENTRYPOINT` that invokes [pipeline.py],
 # ✅ Success (iteration 18/30)
 # ✅ Success (iteration 19/30)
 # ✅ Success (iteration 20/30)
-# ❌ Failure (iteration 21/30); exit code 139 (segfault in Docker)
+# ❌ Failure (iteration 21/30): exit code 139 (segfault in Docker)
 # ✅ Success (iteration 22/30)
-# ❌ Failure (iteration 23/30); exit code 139 (segfault in Docker)
+# ❌ Failure (iteration 23/30): exit code 139 (segfault in Docker)
 # ✅ Success (iteration 24/30)
 # ✅ Success (iteration 25/30)
 # ✅ Success (iteration 26/30)
@@ -86,21 +253,6 @@ See [Dockerfile](Dockerfile). It has an `ENTRYPOINT` that invokes [pipeline.py],
 # ✅ Success (iteration 28/30)
 # ✅ Success (iteration 29/30)
 # ✅ Success (iteration 30/30)
-```
-
-### Reproduce on host <a id="host"></a>
-
-#### 1. Setup, install dependencies <a id="setup-host"></a>
-```bash
-mamba env update -y -n segfault -f environment.yml
-conda init bash
-. ~/.bashrc
-conda activate segfault
-```
-
-#### 2. Run `pipeline.py` repeatedly, observe occasional segfaults <a id="run-host"></a>
-```bash
-run.py | grep iteration
 ```
 
 ## Discussion <a id="discussion"></a>
@@ -136,22 +288,6 @@ I've also tried to reduce dependencies and update versions of what remains (see 
 ### Python `faulthandler` not working <a id="faulthandler"></a>
 I've tried to enable a more detailed stack trace from the segfault in a few places ([Dockerfile#L4](Dockerfile#L4), [entrypoint.sh#L4](entrypoint.sh#L4), [pipeline.py#L7](pipeline.py#L7)), per [these instructions][segfault debug article], but have so far been unable to get any more info about where it is occurring.
 
-### Appendix: set Docker `"default-runtime": "nvidia"` <a id="docker-nvidia"></a>
-[`run.py`] (used in [the docker run instructions above](#run-docker) passes `--runtime nvidia` to the `docker run` command it runs. For running/testing yourself, you may prefer to set the `nvidia` Docker runtime as the default:
-
-```bash
-# Set "default-runtime": "nvidia" in /etc/docker/daemon.json
-n=daemon.json
-f=/etc/docker/$n
-sudo cp $f $f.bak
-sudo cat $f | jq '."default-runtime" = "nvidia"' > $n
-sudo cp $n $f
-echo "Updated $f:"
-cat $f
-sudo systemctl restart docker
-```
-
-
 
 [`scanpy.preprocessing.neighbors`]: https://github.com/scverse/scanpy/blob/1.8.2/scanpy/neighbors/__init__.py#L52
 [`scanpy.neighbors.compute_neighbors_rapids`]: https://github.com/scverse/scanpy/blob/1.8.2/scanpy/neighbors/__init__.py#L318
@@ -163,3 +299,5 @@ sudo systemctl restart docker
 [pipeline.py]: pipeline.py
 [segfault debug article]: https://blog.richard.do/2018/03/18/how-to-debug-segmentation-fault-in-python/
 [`run.py`]: run.py
+[`pipeline.py`]: pipeline.py
+[DLAMI versions]: https://docs.aws.amazon.com/dlami/latest/devguide/appendix-ami-release-notes.html
