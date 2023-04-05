@@ -168,7 +168,7 @@ cd gpu-segfault
 
 #### 1. Create conda env with necessary dependencies <a id="setup-host"></a>
 ```bash
-conda env update -y -n segfault -f environment.yml
+conda env update -n segfault -f environment.yml
 conda activate segfault
 ```
 
@@ -176,7 +176,7 @@ conda activate segfault
 
 #### 2. Run [`pipeline.py`] repeatedly, observe occasional segfaults <a id="run-host"></a>
 ```bash
-run.py -q
+./run.py -q
 # ✅ Success (iteration 01/30)
 # ❌ Failure (iteration 02/30): exit code 139 (segfault)
 # ✅ Success (iteration 03/30)

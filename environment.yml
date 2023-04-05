@@ -10,4 +10,5 @@ dependencies:
   - pytorch==1.13.1
   - pip
   - pip:
+    - click
     - metaflow==2.8.1
