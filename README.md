@@ -142,7 +142,7 @@ aws ec2 describe-images --image-ids ami-058e8127e717f752b ami-0ac44af394b7d6689 
 ### Setup GPU instance <a id="setup-instance"></a>
 On the GPU instance created above:
 ```bash
-git clone git@github.com:ryan-williams/torch-cuml-metaflow-gpu-segfault.git gpu-segfault
+git clone https://github.com/ryan-williams/torch-cuml-metaflow-gpu-segfault gpu-segfault
 cd gpu-segfault
 ./init-conda-env.sh  # update conda, create `segfault` conda env
 . ~/.bashrc          # activate `segfault` conda env
