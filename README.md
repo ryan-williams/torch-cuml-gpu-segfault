@@ -142,26 +142,17 @@ aws ec2 describe-images --image-ids ami-058e8127e717f752b ami-0ac44af394b7d6689 
 
 TODO: complete set of `aws` commands (or Terraform template) to stand up such a node. In a fresh AWS account, I had to request a quota increase to 8 vCPUs for P-class instances.
 
-#### Install miniconda with `libmamba-solver` <a id="install-miniconda"></a>
-A recent Conda with the libmamba-solver is the quickest way to get [`environment.yml`] installed:
-
-```bash
-d=~/miniconda
-wget -q "https://repo.anaconda.com/miniconda/Miniconda3-py39_23.1.0-1-Linux-x86_64.sh" -O ~/miniconda.sh && \
-/bin/bash ~/miniconda.sh -b -p $d && \
-rm ~/miniconda.sh && \
-echo ". $d/etc/profile.d/conda.sh" >> ~/.bashrc && \
-echo "conda activate base" >> ~/.bashrc && \
-. ~/.bashrc && \
-conda --version && \
-conda install -y -n base conda-libmamba-solver && \
-conda config --set solver libmamba
-```
-
 #### Clone this repo <a id="clone-repo"></a>
 ```bash
 git clone git@github.com:ryan-williams/torch-cuml-metaflow-gpu-segfault.git gpu-segfault
 cd gpu-segfault
+```
+
+#### Install miniconda with `libmamba-solver` <a id="install-miniconda"></a>
+A recent Conda with the libmamba-solver is the quickest way to get [`environment.yml`] installed:
+
+```bash
+./init-conda-env.sh
 ```
 
 ### Reproduce on host <a id="host"></a>
