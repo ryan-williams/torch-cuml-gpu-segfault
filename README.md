@@ -140,7 +140,7 @@ aws ec2 describe-images --image-ids ami-058e8127e717f752b ami-0ac44af394b7d6689 
 ```
 </details>
 
-TODO: complete set of `aws` commands (or Terraform template) to stand up such a node. In a fresh AWS account, I had to request a quota increase to 8 vCPUs for P-class instances.
+[`instance.tf`] is an example Terraform template for creating such an instance, using AMI `ami-058e8127e717f752b` (Amazon's "Deep Learning AMI (Amazon Linux 2) Version 69.1").
 
 #### Clone this repo <a id="clone-repo"></a>
 ```bash
@@ -284,3 +284,4 @@ I've tried to enable a more detailed stack trace from the segfault in a few plac
 [`run.py`]: run.py
 [`pipeline.py`]: pipeline.py
 [DLAMI versions]: https://docs.aws.amazon.com/dlami/latest/devguide/appendix-ami-release-notes.html
+[`instance.tf`]: instance.tf

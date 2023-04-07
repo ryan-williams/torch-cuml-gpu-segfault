@@ -2,10 +2,8 @@ variable "awsprops" {
   type = map
   default = {
     region = "us-east-1"
-#    vpc = ""
-    ami = "ami-058e8127e717f752b"
+    ami = "ami-058e8127e717f752b"  # PyTorch-1.13, TensorFlow-2.11, MXNet-1.9, Neuron, & others. NVIDIA CUDA, cuDNN, NCCL, Intel MKL-DNN, Docker, NVIDIA-Docker & EFA support. For fully managed experience, check: https://aws.amazon.com/sagemaker
     itype = "p3.2xlarge"
-#    subnet = ""
     publicip = true
     keyname = "gpu-segfault-test-node"
     gpu-segfault-sg = "gpu-segfault-sg"
@@ -19,7 +17,6 @@ provider "aws" {
 resource "aws_security_group" "gpu-segfault-sg" {
   name = lookup(var.awsprops, "gpu-segfault-sg")
   description = lookup(var.awsprops, "gpu-segfault-sg")
-#  vpc_id = lookup(var.awsprops, "vpc")
 
   // To Allow SSH Transport
   ingress {
@@ -45,7 +42,6 @@ resource "aws_security_group" "gpu-segfault-sg" {
 resource "aws_instance" "gpu-segfault-test-instance" {
   ami = lookup(var.awsprops, "ami")
   instance_type = lookup(var.awsprops, "itype")
-#  subnet_id = lookup(var.awsprops, "subnet")
   associate_public_ip_address = lookup(var.awsprops, "publicip")
   key_name = lookup(var.awsprops, "keyname")
 
