@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+# Invoke pipeline.py as directly as possible, via a `python` invocation that is normally nested a couple subprocesses
+# deep in a Metaflow workflow run
 
 python \
     -Xfaulthandler \

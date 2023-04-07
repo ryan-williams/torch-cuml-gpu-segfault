@@ -153,7 +153,7 @@ cd gpu-segfault
 - creates a `segfault` Conda env from [`environment.yml`]
 
 ### Reproduce on host <a id="host"></a>
-Run [`pipeline.py`] repeatedly, observe occasional (≈10%) segfaults
+[`run.py`] runs [`pipeline.py`] repeatedly (via [`entrypoint.sh`]), and shows occasional (≈10%) segfaults:
 ```bash
 ./run.py -q
 # ✅ Success (iteration 01/30)
@@ -190,6 +190,7 @@ Run [`pipeline.py`] repeatedly, observe occasional (≈10%) segfaults
 ```
 
 ### Reproduce in Docker <a id="docker"></a>
+The same behavior can be observed in a Docker image, built from this repo and run using `--runtime nvidia`:
 
 #### 1. Build Docker image <a id="build-docker"></a>
 ```bash
@@ -197,11 +198,12 @@ img=segfault
 docker build -t$img .
 ```
 
-See [Dockerfile](Dockerfile). It has an `ENTRYPOINT` that invokes [`pipeline.py`], which imports `torch` and then runs a `cuml` nearest-neighbors function.
+See [Dockerfile](Dockerfile).
 
 #### 2. Run image repeatedly, observe occasional segfaults <a id="run-docker"></a>
+In this case, [`run.py`] repeatedly runs the Docker `$img` built above:
 ```bash
-./run.py -d $img -q | grep iteration
+./run.py -d $img -q
 # ✅ Success (iteration 01/30)
 # ✅ Success (iteration 02/30)
 # ✅ Success (iteration 03/30)
@@ -282,3 +284,4 @@ I've tried to enable a more detailed stack trace from the segfault in a few plac
 [DLAMI versions]: https://docs.aws.amazon.com/dlami/latest/devguide/appendix-ami-release-notes.html
 [`instance.tf`]: instance.tf
 [`init-conda-env.sh`]: init-conda-env.sh
+[`entrypoint.sh`]: entrypoint.sh
