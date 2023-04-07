@@ -2,12 +2,21 @@ variable "awsprops" {
   type = map
   default = {
     region = "us-east-1"
-    ami = "ami-058e8127e717f752b"  # PyTorch-1.13, TensorFlow-2.11, MXNet-1.9, Neuron, & others. NVIDIA CUDA, cuDNN, NCCL, Intel MKL-DNN, Docker, NVIDIA-Docker & EFA support. For fully managed experience, check: https://aws.amazon.com/sagemaker
     itype = "p3.2xlarge"
     publicip = true
     keyname = "gpu-segfault-test-node"
     gpu-segfault-sg = "gpu-segfault-sg"
   }
+}
+
+variable image_id {
+  type    = string
+  default = "ami-0a7de320e83dfd4ee"  # Deep Learning AMI GPU PyTorch 1.13.1 (Amazon Linux 2) 20230310
+}
+
+variable volume_size {
+  type = number
+  default = 80
 }
 
 provider "aws" {
@@ -40,7 +49,7 @@ resource "aws_security_group" "gpu-segfault-sg" {
 
 
 resource "aws_instance" "gpu-segfault-test-instance" {
-  ami = lookup(var.awsprops, "ami")
+  ami = var.image_id
   instance_type = lookup(var.awsprops, "itype")
   associate_public_ip_address = lookup(var.awsprops, "publicip")
   key_name = lookup(var.awsprops, "keyname")
@@ -51,7 +60,7 @@ resource "aws_instance" "gpu-segfault-test-instance" {
   root_block_device {
     delete_on_termination = true
     iops = 150
-    volume_size = 180
+    volume_size = var.volume_size
     volume_type = "gp3"
   }
   tags = {

@@ -3,8 +3,8 @@
 - [Reproduction steps](#repro)
   - [Create GPU instance](#create-instance)
   - [Setup GPU instance](#setup-instance)
-  - [Reproduce on host](#host)
-  - [Reproduce in Docker](#docker)
+  - [Reproduce segfault on host](#host)
+  - [Reproduce segfault in Docker](#docker)
     - [1. Build Docker image](#build-docker)
     - [2. Run image repeatedly, observe occasional segfaults](#run-docker)
 - [Discussion](#discussion)
@@ -15,132 +15,15 @@
 ## Reproduction steps <a id="repro"></a>
 
 ### Create GPU instance <a id="create-instance"></a>
-I've tested this on EC2 `p3.2xlarge` instances, with a few versions of [Amazon's "Deep Learning AMI (Amazon Linux 2)"][DLAMI versions]:
-- Version 57.1 (`ami-01dfbf223bd1b9835`)
-- Version 61.3 (`ami-0ac44af394b7d6689`)
-- Version 69.1 (`ami-058e8127e717f752b`)
-
-<details><summary>AMI details</summary>
-
-```bash
-aws ec2 describe-images --image-ids ami-058e8127e717f752b ami-0ac44af394b7d6689 ami-01dfbf223bd1b9835 | jq '.Images | sort_by(.Name)'
-```
-```json
-[
-  {
-    "Architecture": "x86_64",
-    "CreationDate": "2022-02-11T19:00:37.000Z",
-    "ImageId": "ami-01dfbf223bd1b9835",
-    "ImageLocation": "amazon/Deep Learning AMI (Amazon Linux 2) Version 57.1",
-    "ImageType": "machine",
-    "Public": true,
-    "OwnerId": "898082745236",
-    "PlatformDetails": "Linux/UNIX",
-    "UsageOperation": "RunInstances",
-    "State": "available",
-    "BlockDeviceMappings": [
-      {
-        "DeviceName": "/dev/xvda",
-        "Ebs": {
-          "DeleteOnTermination": true,
-          "SnapshotId": "snap-06a454c8994b48c9b",
-          "VolumeSize": 130,
-          "VolumeType": "gp2",
-          "Encrypted": false
-        }
-      }
-    ],
-    "Description": "MXNet-1.8, TensorFlow-2.7, PyTorch-1.10, Neuron, & others. NVIDIA CUDA, cuDNN, NCCL, Intel MKL-DNN, Docker, NVIDIA-Docker & EFA support. For fully managed experience, check: https://aws.amazon.com/sagemaker",
-    "EnaSupport": true,
-    "Hypervisor": "xen",
-    "ImageOwnerAlias": "amazon",
-    "Name": "Deep Learning AMI (Amazon Linux 2) Version 57.1",
-    "RootDeviceName": "/dev/xvda",
-    "RootDeviceType": "ebs",
-    "SriovNetSupport": "simple",
-    "VirtualizationType": "hvm",
-    "DeprecationTime": "2024-02-11T19:00:37.000Z"
-  },
-  {
-    "Architecture": "x86_64",
-    "CreationDate": "2022-05-25T10:13:50.000Z",
-    "ImageId": "ami-0ac44af394b7d6689",
-    "ImageLocation": "amazon/Deep Learning AMI (Amazon Linux 2) Version 61.3",
-    "ImageType": "machine",
-    "Public": true,
-    "OwnerId": "898082745236",
-    "PlatformDetails": "Linux/UNIX",
-    "UsageOperation": "RunInstances",
-    "State": "available",
-    "BlockDeviceMappings": [
-      {
-        "DeviceName": "/dev/xvda",
-        "Ebs": {
-          "DeleteOnTermination": true,
-          "Iops": 3000,
-          "SnapshotId": "snap-0c9f58769e1e40147",
-          "VolumeSize": 140,
-          "VolumeType": "gp3",
-          "Throughput": 125,
-          "Encrypted": false
-        }
-      }
-    ],
-    "Description": "MXNet-1.8, TensorFlow-2.7, PyTorch-1.10, Neuron, & others. NVIDIA CUDA, cuDNN, NCCL, Intel MKL-DNN, Docker, NVIDIA-Docker & EFA support. For fully managed experience, check: https://aws.amazon.com/sagemaker",
-    "EnaSupport": true,
-    "Hypervisor": "xen",
-    "ImageOwnerAlias": "amazon",
-    "Name": "Deep Learning AMI (Amazon Linux 2) Version 61.3",
-    "RootDeviceName": "/dev/xvda",
-    "RootDeviceType": "ebs",
-    "SriovNetSupport": "simple",
-    "VirtualizationType": "hvm",
-    "DeprecationTime": "2024-05-24T10:14:00.000Z"
-  },
-  {
-    "Architecture": "x86_64",
-    "CreationDate": "2022-12-28T10:56:57.000Z",
-    "ImageId": "ami-058e8127e717f752b",
-    "ImageLocation": "amazon/Deep Learning AMI (Amazon Linux 2) Version 69.1",
-    "ImageType": "machine",
-    "Public": true,
-    "OwnerId": "898082745236",
-    "PlatformDetails": "Linux/UNIX",
-    "UsageOperation": "RunInstances",
-    "State": "available",
-    "BlockDeviceMappings": [
-      {
-        "DeviceName": "/dev/xvda",
-        "Ebs": {
-          "DeleteOnTermination": true,
-          "Iops": 3000,
-          "SnapshotId": "snap-03c5960cd84e5cfbc",
-          "VolumeSize": 130,
-          "VolumeType": "gp3",
-          "Throughput": 125,
-          "Encrypted": false
-        }
-      }
-    ],
-    "Description": "PyTorch-1.13, TensorFlow-2.11, MXNet-1.9, Neuron, & others. NVIDIA CUDA, cuDNN, NCCL, Intel MKL-DNN, Docker, NVIDIA-Docker & EFA support. For fully managed experience, check: https://aws.amazon.com/sagemaker",
-    "EnaSupport": true,
-    "Hypervisor": "xen",
-    "ImageOwnerAlias": "amazon",
-    "Name": "Deep Learning AMI (Amazon Linux 2) Version 69.1",
-    "RootDeviceName": "/dev/xvda",
-    "RootDeviceType": "ebs",
-    "SriovNetSupport": "simple",
-    "VirtualizationType": "hvm",
-    "DeprecationTime": "2024-12-28T10:56:57.000Z"
-  }
-]
-```
-</details>
-
-[`instance.tf`] is an example Terraform template for creating such an instance, using AMI `ami-058e8127e717f752b` (Amazon's "Deep Learning AMI (Amazon Linux 2) Version 69.1").
+I've tested this on EC2 `p3.2xlarge` instances, with several AMIs:
+- [`instance.tf`] is an example Terraform template for creating such a `p3.2xlarge`, using `ami-0a7de320e83dfd4ee` (["Deep Learning AMI GPU PyTorch 1.13.1 (Amazon Linux 2) 20230310"]).
+- I originally reproduced this issue on several versions of Amazon's ["Deep Learning AMI (Amazon Linux 2)"][DLAMI versions]:
+  - Version 57.1 (`ami-01dfbf223bd1b9835`)
+  - Version 61.3 (`ami-0ac44af394b7d6689`)
+  - Version 69.1 (`ami-058e8127e717f752b`)
 
 ### Setup GPU instance <a id="setup-instance"></a>
-On the GPU instance created above:
+On a `p3.2xlarge` GPU instance:
 ```bash
 git clone https://github.com/ryan-williams/torch-cuml-metaflow-gpu-segfault gpu-segfault
 cd gpu-segfault
@@ -152,7 +35,7 @@ cd gpu-segfault
 - installs a recent Conda and configures the `libmamba-solver` (this is the quickest way to get [`environment.yml`] installed)
 - creates a `segfault` Conda env from [`environment.yml`]
 
-### Reproduce on host <a id="host"></a>
+### Reproduce segfault on host <a id="host"></a>
 [`run.py`] runs [`pipeline.py`] repeatedly (via [`entrypoint.sh`]), and shows occasional (≈10%) segfaults:
 ```bash
 ./run.py -q
@@ -189,7 +72,7 @@ cd gpu-segfault
 ❌ 3/30 runs failed (10.0%)
 ```
 
-### Reproduce in Docker <a id="docker"></a>
+### Reproduce segfault in Docker <a id="docker"></a>
 The same behavior can be observed in a Docker image, built from this repo and run using `--runtime nvidia`:
 
 #### 1. Build Docker image <a id="build-docker"></a>
@@ -285,3 +168,5 @@ I've tried to enable a more detailed stack trace from the segfault in a few plac
 [`instance.tf`]: instance.tf
 [`init-conda-env.sh`]: init-conda-env.sh
 [`entrypoint.sh`]: entrypoint.sh
+
+["Deep Learning AMI GPU PyTorch 1.13.1 (Amazon Linux 2) 20230310"]: https://aws.amazon.com/releasenotes/aws-deep-learning-ami-gpu-pytorch-1-13-amazon-linux-2/

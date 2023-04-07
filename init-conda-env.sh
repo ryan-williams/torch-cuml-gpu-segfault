@@ -13,6 +13,7 @@ conda activate base
 conda --version
 time conda install -y -n base conda-libmamba-solver
 conda config --set solver libmamba
+conda config --set channel_priority flexible  # https://github.com/rapidsai/cuml/issues/4016
 
 # Create conda env with necessary dependencies (see environment.yml)
 conda env update -n segfault -f environment.yml
