@@ -1,12 +1,9 @@
 # Unused `import torch` causes nondeterministic segfault when using `cuml`
 
 - [Reproduction steps](#repro)
-  - [Setup GPU instance](#setup)
-    - [Install miniconda with `libmamba-solver`](#install-miniconda)
-    - [Clone this repo](#clone-repo)
+  - [Create GPU instance](#create-instance)
+  - [Setup GPU instance](#setup-instance)
   - [Reproduce on host](#host)
-    - [1. Create conda env with necessary dependencies](#setup-host)
-    - [2. Run [`pipeline.py`] repeatedly, observe occasional segfaults](#run-host)
   - [Reproduce in Docker](#docker)
     - [1. Build Docker image](#build-docker)
     - [2. Run image repeatedly, observe occasional segfaults](#run-docker)
@@ -17,7 +14,7 @@
 
 ## Reproduction steps <a id="repro"></a>
 
-### Setup GPU instance <a id="setup"></a>
+### Create GPU instance <a id="create-instance"></a>
 I've tested this on EC2 `p3.2xlarge` instances, with a few versions of [Amazon's "Deep Learning AMI (Amazon Linux 2)"][DLAMI versions]:
 - Version 57.1 (`ami-01dfbf223bd1b9835`)
 - Version 61.3 (`ami-0ac44af394b7d6689`)
@@ -142,19 +139,18 @@ aws ec2 describe-images --image-ids ami-058e8127e717f752b ami-0ac44af394b7d6689 
 
 [`instance.tf`] is an example Terraform template for creating such an instance, using AMI `ami-058e8127e717f752b` (Amazon's "Deep Learning AMI (Amazon Linux 2) Version 69.1").
 
-#### Clone this repo <a id="clone-repo"></a>
+### Setup GPU instance <a id="setup-instance"></a>
+On the GPU instance created above:
 ```bash
 git clone git@github.com:ryan-williams/torch-cuml-metaflow-gpu-segfault.git gpu-segfault
 cd gpu-segfault
+./init-conda-env.sh  # update conda, create `segfault` conda env
+. ~/.bashrc          # activate `segfault` conda env
 ```
 
-#### Install miniconda with `libmamba-solver` <a id="install-miniconda"></a>
-A recent Conda with the libmamba-solver is the quickest way to get [`environment.yml`] installed:
-
-```bash
-./init-conda-env.sh
-. ~/.bashrc
-```
+[`init-conda-env.sh`]:
+- installs a recent Conda and configures the `libmamba-solver` (this is the quickest way to get [`environment.yml`] installed)
+- creates a `segfault` Conda env from [`environment.yml`]
 
 ### Reproduce on host <a id="host"></a>
 Run [`pipeline.py`] repeatedly, observe occasional (≈10%) segfaults
@@ -285,3 +281,4 @@ I've tried to enable a more detailed stack trace from the segfault in a few plac
 [`pipeline.py`]: pipeline.py
 [DLAMI versions]: https://docs.aws.amazon.com/dlami/latest/devguide/appendix-ami-release-notes.html
 [`instance.tf`]: instance.tf
+[`init-conda-env.sh`]: init-conda-env.sh

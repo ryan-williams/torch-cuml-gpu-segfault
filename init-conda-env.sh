@@ -17,4 +17,3 @@ conda config --set solver libmamba
 # Create conda env with necessary dependencies (see environment.yml)
 conda env update -n segfault -f environment.yml
 echo "conda activate segfault" >> ~/.bashrc
-. ~/.bashrc
