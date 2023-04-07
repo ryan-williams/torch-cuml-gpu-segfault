@@ -27,7 +27,7 @@ On a `p3.2xlarge` GPU instance:
 ```bash
 git clone https://github.com/ryan-williams/torch-cuml-metaflow-gpu-segfault gpu-segfault
 cd gpu-segfault
-./init-conda-env.sh  # update conda, create `segfault` conda env
+time ./init-conda-env.sh  # update conda, create `segfault` conda env
 . ~/.bashrc          # activate `segfault` conda env
 ```
 

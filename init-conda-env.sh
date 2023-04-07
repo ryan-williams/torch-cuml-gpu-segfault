@@ -8,6 +8,7 @@ wget -q "https://repo.anaconda.com/miniconda/Miniconda3-py39_23.1.0-1-Linux-x86_
 /bin/bash ~/miniconda.sh -b -p $d
 rm ~/miniconda.sh
 echo ". $d/etc/profile.d/conda.sh" >> ~/.bashrc
+conda init bash
 . ~/.bashrc
 conda activate base
 conda --version
@@ -16,5 +17,5 @@ conda config --set solver libmamba
 conda config --set channel_priority flexible  # https://github.com/rapidsai/cuml/issues/4016
 
 # Create conda env with necessary dependencies (see environment.yml)
-conda env update -n segfault -f environment.yml
+conda env update -n segfault
 echo "conda activate segfault" >> ~/.bashrc
