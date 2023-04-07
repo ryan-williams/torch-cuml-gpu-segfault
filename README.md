@@ -153,19 +153,11 @@ A recent Conda with the libmamba-solver is the quickest way to get [`environment
 
 ```bash
 ./init-conda-env.sh
+. ~/.bashrc
 ```
 
 ### Reproduce on host <a id="host"></a>
-
-#### 1. Create conda env with necessary dependencies <a id="setup-host"></a>
-```bash
-conda env update -n segfault -f environment.yml
-conda activate segfault
-```
-
-(see [`environment.yml`])
-
-#### 2. Run [`pipeline.py`] repeatedly, observe occasional segfaults <a id="run-host"></a>
+Run [`pipeline.py`] repeatedly, observe occasional (≈10%) segfaults
 ```bash
 ./run.py -q
 # ✅ Success (iteration 01/30)
