@@ -1,4 +1,5 @@
-# Unused `import torch` causes nondeterministic segfault when using `cuml`
+# Unused `import torch` causes nondeterministic segfault when using [`cuml`]
+On AWS `p3.2xlarge` instances (with NVIDIA V100 GPUs), importing [PyTorch] is side-effectful, and causes a `cuml.NearestNeighbors` execution to segfault (during Python process cleanup) on ≈10% of runs.
 
 - [Reproduction steps](#repro)
   - [Create P3-class GPU instance](#create-instance)
@@ -199,3 +200,5 @@ I've tried to enable a more detailed stack trace from the segfault in a few plac
 [`neighbors.py`]: neighbors.py
 [Metaflow]: https://metaflow.org/
 [cdk#async]: cdk/README.md#async
+[PyTorch]: https://pytorch.org/
+[`cuml`]: https://github.com/rapidsai/cuml
