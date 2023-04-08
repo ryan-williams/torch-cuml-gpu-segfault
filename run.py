@@ -8,12 +8,11 @@ import click
 
 @click.command('run.py', help='Repeatedly run `entrypoint.sh`, either in Docker on or the host')
 @click.option('-d', '--docker-img', help="Run this docker image (assumed to have been built from this repo, with ENTRYPOINT `entrypoint.sh`")
-@click.option('-M', '--no-metaflow', is_flag=True, help="Invoke neighbors:run directly, not via Metaflow")
 @click.option('-n', '--num-repetitions', 'n', default=30, help='Repeat the `pipeline.py` execution this many times')
 @click.option('-q', '--quiet', is_flag=True, help='Suppress subprocess output, only print success/failure info for each iteration')
 @click.option('-x', '--exit-early', is_flag=True, help='Exit on first failure')
-def main(docker_img, no_metaflow, n, quiet, exit_early):
-    entrypoint = "./neighbors.py" if no_metaflow else "./entrypoint.sh"
+def main(docker_img, n, quiet, exit_early):
+    entrypoint = "./neighbors.py"
     if docker_img:
         cmd = [ "docker", "run", "-it", "--rm", "--runtime", "nvidia", '-e', entrypoint, docker_img ]
     else:

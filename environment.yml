@@ -11,4 +11,3 @@ dependencies:
   - pip
   - pip:
     - click
-    - metaflow==2.8.1

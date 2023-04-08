@@ -31,7 +31,7 @@ Any "P3" family instance seems to exhibit the behavior, but:
 ### Setup GPU instance <a id="setup-instance"></a>
 On a `p3.2xlarge` GPU instance:
 ```bash
-git clone https://github.com/ryan-williams/torch-cuml-metaflow-gpu-segfault gpu-segfault
+git clone https://github.com/ryan-williams/torch-cuml-gpu-segfault gpu-segfault
 cd gpu-segfault
 time ./init-conda-env.sh  # update conda, create `segfault` conda env
 . ~/.bashrc          # activate `segfault` conda env
@@ -134,7 +134,7 @@ In this case, [`run.py`] repeatedly runs the Docker `$img` built above:
 - Calls [`kneighbors`] on `X`
 
 ### Removing unused `import torch` fixes it <a id="import"></a>
-Something about [this `import torch`][`import torch`] is side-effectful, and creates a condition where some cleanup process seg-faults while Metaflow is cleaning up the step. Presumably the data structures in question are instantiated by `cuml` (probably `cudf` DataFrames); if [the `nn.kneighbors` call](pipeline.py#L21-L22) is commented out, the segfault also goes away.
+Something about [this `import torch`][`import torch`] is side-effectful, and creates a condition where some cleanup process seg-faults while the Python process is exiting. Presumably the data structures in question are instantiated by `cuml` (probably `cudf` DataFrames); if [the `nn.kneighbors` call](pipeline.py#L21-L22) is commented out, the segfault also goes away.
 
 If you remove [the unused `import torch` in pipeline.py][`import torch`], the segfaults go away:
 ```python
@@ -153,9 +153,7 @@ python run.py  # ✅ now everything succeeds!
 ### Minimizing the example <a id="minimizing"></a>
 This is as minimal of a repro as I've found for this issue, which initially manifested during a call to [`scanpy.preprocessing.neighbors`] on larger, private data, during a (larger) [`Metaflow`] pipeline run.
 
-Here I've isolated the specific Metaflow step (by pre-populating some data in [the `.metaflow-example` directory](.metaflow-example/Pipeline)) to avoid extra subprocess calls Metaflow would otherwise make en route to hitting the segfault.
-
-I've also tried to reduce dependencies and update versions of what remains (see [`environment.yml`]). My original context is tied to Python 3.9 and CUDA 11.6, hence the [`cuml==22.06.01&lsqb;build=cuda11_py39*&rsqb;`](environment.yml#L8) pin. I originally hit the issue on Torch 1.12.1, but it persists with Torch 1.13.1 here.
+I've tried to reduce dependencies and update versions of what remains (see [`environment.yml`]). I originally hit the issue with CUDA 11.6 and `cuml==22.06.01`, but the repro holds on CUDA 11.7 and `cuml==22.12.00`.
 
 ### Python `faulthandler` not working <a id="faulthandler"></a>
 I've tried to enable a more detailed stack trace from the segfault in a few places ([Dockerfile#L4](Dockerfile#L4), [entrypoint.sh#L4](entrypoint.sh#L4), [pipeline.py#L7](pipeline.py#L7)), per [these instructions][segfault debug article], but have so far been unable to get any more info about where it is occurring.
@@ -166,7 +164,6 @@ I've tried to enable a more detailed stack trace from the segfault in a few plac
 [`environment.yml`]: environment.yml
 [`cuml.neighbors.NearestNeighbors`]: https://github.com/rapidsai/cuml/blob/v22.06.01/python/cuml/neighbors/nearest_neighbors.pyx#L153
 [`kneighbors`]: https://github.com/rapidsai/cuml/blob/v22.06.01/python/cuml/neighbors/nearest_neighbors.pyx#L482
-[`Metaflow`]: https://metaflow.org/
 [`import torch`]: pipeline.py#L14
 [pipeline.py]: pipeline.py
 [segfault debug article]: https://blog.richard.do/2018/03/18/how-to-debug-segmentation-fault-in-python/
