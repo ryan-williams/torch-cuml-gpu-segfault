@@ -9,8 +9,7 @@ wget -q "https://repo.anaconda.com/miniconda/Miniconda3-py39_23.1.0-1-Linux-x86_
 rm ~/miniconda.sh
 echo ". $d/etc/profile.d/conda.sh" >> ~/.bashrc
 . ~/.bashrc
-conda init bash
-. ~/.bashrc
+conda --version
 conda activate base
 conda --version
 time conda install -y -n base conda-libmamba-solver
