@@ -1,5 +1,5 @@
 # Unused `import torch` causes nondeterministic segfault when using [`cuml`]
-On AWS `p3.2xlarge` instances (with NVIDIA V100 GPUs), importing [PyTorch] is side-effectful, and causes a `cuml.NearestNeighbors` execution to segfault (during Python process cleanup) on ≈10% of runs.
+Importing [PyTorch] is side-effectful, and causes a segfault after `cuml.NearestNeighbors` execution (≈10% of the time, apparently during Python process cleanup).
 
 - [Reproduction steps](#repro)
   - [Create P3-class GPU instance](#create-instance)
@@ -15,7 +15,7 @@ On AWS `p3.2xlarge` instances (with NVIDIA V100 GPUs), importing [PyTorch] is si
 
 ## Reproduction steps <a id="repro"></a>
 
-I've tested this on EC2 `p3.2xlarge` instances, with [an NVIDIA V100 GPU][p3 instances], with several AMIs:
+I've tested this on EC2 `p3.2xlarge` instances (with [an NVIDIA V100 GPU][p3 instances]) using several AMIs:
 - [`ami-03fce349214ac583f`]: Deep Learning AMI GPU PyTorch 1.13.1 (Ubuntu 20.04) 20221226
 - [`ami-0a7de320e83dfd4ee`]: Deep Learning AMI GPU PyTorch 1.13.1 (Amazon Linux 2) 20230310
 - `ami-003f25e6e2d2db8f1`: NVIDIA GPU-Optimized AMI 22.06.0-676eed8d-dcf5-4784-87d7-0de463205c17 (marketplace image, "subscribe" for free [here](https://aws.amazon.com/marketplace/server/procurement?productId=676eed8d-dcf5-4784-87d7-0de463205c17))
@@ -25,12 +25,11 @@ I've tested this on EC2 `p3.2xlarge` instances, with [an NVIDIA V100 GPU][p3 ins
   - Version 69.1 (`ami-058e8127e717f752b`)
 
 ### Create P3-class GPU instance <a id="create-instance"></a>
-Any "P3" family instance seems to exhibit the behavior, but:
-- [cdk/] contains [CDK] scripts for booting an instance with a configurable AMI
+- [cdk/] contains [CDK] scripts for launching a `p3.2xlarge` instance
   - Uses [`ami-0a7de320e83dfd4ee`] ("Deep Learning AMI GPU PyTorch 1.13.1 (Amazon Linux 2) 20230310") by default
-  - Runs [`init-conda-env.sh`] on instance boot (make sure you [wait until that's done][cdk#async], when you first log in!)
+  - Runs [`init-conda-env.sh`] on instance boot (make sure you [wait until that's done][cdk#async], on first log in)
 - [`instance.tf`] is an example Terraform template for doing similar
-  - Doesn't initialize node, see instructions below:
+  - Doesn't initialize the instance, see [instructions below](#setup-instance).
 
 You may need to request a quota increase for P-class instance vCPUs, if you've never launched one:
 
@@ -43,7 +42,7 @@ aws service-quotas request-service-quota-increase \
 
 [This page](https://us-east-1.console.aws.amazon.com/servicequotas/home/services/ec2/quotas/L-417A185B) should also work.
 
-Other GPU instance types may also exhibit the issue, I've just tested on `p3.2xlarge`s.
+Other GPU instance types may also exhibit the issue; I've only tested on `p3.2xlarge`s.
 
 ### Setup GPU instance <a id="setup-instance"></a>
 On a `p3.2xlarge` GPU instance:
@@ -57,10 +56,11 @@ time ./init-conda-env.sh  # update conda, create `segfault` conda env; can take 
 The [`init-conda-env.sh`] script:
 - installs a recent Conda and configures the `libmamba-solver` (this is the quickest way to get [`environment.yml`] installed)
 - creates a `segfault` Conda env from [`environment.yml`]
+- can take ≈15mins to run
 
 The [cdk/] scripts run the commands above asynchronously during instance boot; [use `tail -f /var/log/cloud-init-output.log` to see when it's done][cdk#async], if you use those scripts.
 
-Here is a snapshot of the Conda env I see:
+Here is a snapshot of the Conda env I see, after the above is complete:
 
 <details><summary><code>conda list</code></summary>
 
@@ -540,7 +540,7 @@ zstd=1.5.2=h3eb15da_6
 </details>
 
 ### Reproduce segfault on host <a id="host"></a>
-[`run.py`] runs [`neighbors.py`] repeatedly, and shows occasional (≈10%) segfaults:
+[`run.py`] runs [`neighbors.py`] repeatedly, exhibiting occasional (≈10%) segfaults:
 ```bash
 ./run.py -q
 # ✅ Success (iteration 01/30)
