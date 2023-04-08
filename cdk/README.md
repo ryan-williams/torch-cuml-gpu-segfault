@@ -23,11 +23,16 @@ This boots a `p3.2xlarge` instance (containing an NVIDIA V100 GPU), and runs a s
 ```
 
 #### Note that the setup script runs asynchronously! <a id="async"></a>
+[The instance setup script](gpu_segfault/gpu_segfault_stack.py#L59-L71) clones this repo and runs [init-conda-env.sh](../init-conda-env.sh) at launch, which can take ≈15 minutes.
+
 When you first log SSH in, it's a good idea to:
 ```bash
 tail -f /var/log/cloud-init-output.log
 ```
-and wait until you see a line declaring that cloud-init has finished. The instance clones this repo and runs [init-conda-env.sh](../init-conda-env.sh) at launch, which can take ≈15 minutes.
+and wait until you see a line like this, declaring that cloud-init has finished:
+```
+Cloud-init v. 22.4.2-0ubuntu0~20.04.2 finished at Sat, 08 Apr 2023 20:51:52 +0000
+```
 
 Once cloud-init is done, a fresh login (or `. ~/.bashrc`) should activate the `segfault` conda env, with necessary dependencies installed (see [`environment.yml`](../environment.yml)).
 
