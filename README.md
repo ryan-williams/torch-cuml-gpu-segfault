@@ -591,7 +591,7 @@ docker build -t$img .
 
 See [Dockerfile](Dockerfile).
 
-I've also built+pushed this image as [runsascoded/torch-cuml-gpu-segfault](https://hub.docker.com/repository/docker/runsascoded/torch-cuml-gpu-segfaultgeneral).
+I've also built+pushed this image as [runsascoded/torch-cuml-gpu-segfault](https://hub.docker.com/r/runsascoded/torch-cuml-gpu-segfault/tags).
 
 #### 2. Run image repeatedly, observe occasional segfaults
 In this case, [`run.py`] repeatedly runs the Docker `$img` built above:
