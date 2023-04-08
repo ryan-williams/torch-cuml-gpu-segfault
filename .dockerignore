@@ -3,4 +3,5 @@
 !.metaflow-example
 !entrypoint.sh
 !environment.yml
+!neighbors.py
 !pipeline.py

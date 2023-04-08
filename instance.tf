@@ -11,7 +11,7 @@ variable "awsprops" {
 
 variable image_id {
   type    = string
-  default = "ami-0a7de320e83dfd4ee"  # Deep Learning AMI GPU PyTorch 1.13.1 (Amazon Linux 2) 20230310
+  default = "ami-03fce349214ac583f"  # Deep Learning AMI GPU PyTorch 1.13.1 (Amazon Linux 2) 20230310
 }
 
 variable volume_size {

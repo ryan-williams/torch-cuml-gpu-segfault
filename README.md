@@ -14,13 +14,19 @@
 
 ## Reproduction steps <a id="repro"></a>
 
-### Create GPU instance <a id="create-instance"></a>
-I've tested this on EC2 `p3.2xlarge` instances, with several AMIs:
-- [`instance.tf`] is an example Terraform template for creating such a `p3.2xlarge`, using `ami-0a7de320e83dfd4ee` (["Deep Learning AMI GPU PyTorch 1.13.1 (Amazon Linux 2) 20230310"]).
-- I originally reproduced this issue on several versions of Amazon's ["Deep Learning AMI (Amazon Linux 2)"][DLAMI versions]:
+I've tested this on EC2 `p3.2xlarge` instances, with [an NVIDIA V100 GPU][p3 instances], with several AMIs:
+- [`ami-03fce349214ac583f`]: Deep Learning AMI GPU PyTorch 1.13.1 (Ubuntu 20.04) 20221226
+- [`ami-0a7de320e83dfd4ee`]: Deep Learning AMI GPU PyTorch 1.13.1 (Amazon Linux 2) 20230310
+- `ami-003f25e6e2d2db8f1`: NVIDIA GPU-Optimized AMI 22.06.0-676eed8d-dcf5-4784-87d7-0de463205c17 (marketplace image, "subscribe" for free [here](https://aws.amazon.com/marketplace/server/procurement?productId=676eed8d-dcf5-4784-87d7-0de463205c17))
+- Several versions of Amazon's ["Deep Learning AMI (Amazon Linux 2)"]:
   - Version 57.1 (`ami-01dfbf223bd1b9835`)
   - Version 61.3 (`ami-0ac44af394b7d6689`)
   - Version 69.1 (`ami-058e8127e717f752b`)
+
+### Create GPU instance <a id="create-instance"></a>
+Any "P3" family instance seems to exhibit the behavior, but:
+- [`instance.tf`] is an example Terraform template for creating a `p3.2xlarge`, using [`ami-0a7de320e83dfd4ee`] ("Deep Learning AMI GPU PyTorch 1.13.1 (Amazon Linux 2) 20230310")
+- [cdk/] contains [CDK] scripts for booting an instance with a configurable AMI
 
 ### Setup GPU instance <a id="setup-instance"></a>
 On a `p3.2xlarge` GPU instance:
@@ -34,6 +40,8 @@ time ./init-conda-env.sh  # update conda, create `segfault` conda env
 [`init-conda-env.sh`]:
 - installs a recent Conda and configures the `libmamba-solver` (this is the quickest way to get [`environment.yml`] installed)
 - creates a `segfault` Conda env from [`environment.yml`]
+
+The [cdk/] template runs the commands above asynchronously during instance boot; use `tail -f /var/log/cloud-init-output.log` to see when it's done.
 
 ### Reproduce segfault on host <a id="host"></a>
 [`run.py`] runs [`pipeline.py`] repeatedly (via [`entrypoint.sh`]), and shows occasional (≈10%) segfaults:
@@ -164,9 +172,15 @@ I've tried to enable a more detailed stack trace from the segfault in a few plac
 [segfault debug article]: https://blog.richard.do/2018/03/18/how-to-debug-segmentation-fault-in-python/
 [`run.py`]: run.py
 [`pipeline.py`]: pipeline.py
-[DLAMI versions]: https://docs.aws.amazon.com/dlami/latest/devguide/appendix-ami-release-notes.html
 [`instance.tf`]: instance.tf
 [`init-conda-env.sh`]: init-conda-env.sh
 [`entrypoint.sh`]: entrypoint.sh
 
-["Deep Learning AMI GPU PyTorch 1.13.1 (Amazon Linux 2) 20230310"]: https://aws.amazon.com/releasenotes/aws-deep-learning-ami-gpu-pytorch-1-13-amazon-linux-2/
+["Deep Learning AMI (Amazon Linux 2)"]: https://docs.aws.amazon.com/dlami/latest/devguide/appendix-ami-release-notes.html
+[AWS Deep Learning AMI (Amazon Linux 2)]: https://aws.amazon.com/releasenotes/aws-deep-learning-ami-amazon-linux-2/
+[`ami-0a7de320e83dfd4ee`]: https://aws.amazon.com/releasenotes/aws-deep-learning-ami-gpu-pytorch-1-13-amazon-linux-2/
+[`ami-03fce349214ac583f`]: https://aws.amazon.com/releasenotes/aws-deep-learning-ami-gpu-pytorch-1-13-ubuntu-20-04/
+
+[p3 instances]: https://aws.amazon.com/ec2/instance-types/p3/
+[CDK]: https://aws.amazon.com/cdk/
+[cdk/]: cdk

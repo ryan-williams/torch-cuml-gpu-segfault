@@ -1,5 +1,6 @@
-ARG CUDA_VERSION=11.6.1
-FROM nvidia/cuda:${CUDA_VERSION}-base-ubuntu20.04
+ARG CUDA=11.7.1
+ARG UBUNTU=22.04
+FROM nvidia/cuda:${CUDA}-base-ubuntu${UBUNTU}
 
 ENV DEBIAN_FRONTEND=noninteractive
 
@@ -29,5 +30,6 @@ RUN mamba env update -n base -f environment.yml \
 COPY .metaflow-example .metaflow-example
 COPY pipeline.py pipeline.py
 COPY entrypoint.sh entrypoint.sh
+COPY neighbors.py neighbors.py
 
 ENTRYPOINT [ "./entrypoint.sh" ]
