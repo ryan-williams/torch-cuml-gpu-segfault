@@ -44,8 +44,9 @@ def repeat(fn, n, log=print, fail_msg='segfault', exit_early=False):
 @click.option('-q', '--quiet', is_flag=True, help='Suppress subprocess output, only print success/failure info for each iteration')
 @click.option('-r', '--random-seed', default=123, type=int, help='Random seed (set before `cuml.NearestNeighbors` calculation)')
 @click.option('-s', '--shape', default='10x2', help='Shape for random array passed to `cuml.NearestNeighbors`')
+@click.option('-T', '--no-import-torch', is_flag=True, help='Skip the unused `import torch` (segfault no longer occurs)')
 @click.option('-x', '--exit-early', is_flag=True, help='Exit on first failure')
-def main(docker_img, repeat_in_process, n, quiet, random_seed, shape, exit_early):
+def main(docker_img, repeat_in_process, n, quiet, random_seed, shape, no_import_torch, exit_early):
     log = (lambda msg: None) if quiet else print
 
     fail_msg = 'segfault in Docker' if docker_img else 'segfault'
@@ -58,7 +59,7 @@ def main(docker_img, repeat_in_process, n, quiet, random_seed, shape, exit_early
     if repeat_in_process and not docker_img:
         from neighbors import run
         repeat(
-            partial(run.callback, quiet=quiet, random_seed=random_seed, shape=shape),
+            partial(run.callback, quiet=quiet, random_seed=random_seed, shape=shape, no_import_torch=no_import_torch),
             **repeat_kwargs
         )
     else:
@@ -66,6 +67,7 @@ def main(docker_img, repeat_in_process, n, quiet, random_seed, shape, exit_early
             *(['-q'] if quiet else []),
             '-r', f'{random_seed}',
             '-s', shape,
+            *(['-T'] if no_import_torch else []),
         ]
         if docker_img:
             cmd = [ "docker", "run", "-it", "--rm", "--runtime", "nvidia", ]
