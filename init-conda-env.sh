@@ -26,5 +26,5 @@ time "$conda" install -y -n base conda-libmamba-solver
 "$conda" config --set channel_priority flexible  # https://github.com/rapidsai/cuml/issues/4016
 
 # Create conda env with necessary dependencies (see environment.yml)
-time "$conda" env update -n segfault -f environment-simple.yml
+yes | time "$conda" env update -n segfault -f environment-simple.yml
 echo "conda activate segfault" >> ~/.bashrc
