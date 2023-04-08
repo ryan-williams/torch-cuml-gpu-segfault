@@ -30,7 +30,7 @@ def main(docker_img, n, quiet, exit_early):
             print(f"✅ Success (iteration {ii}/{n})")
             successes += 1
         except CalledProcessError as e:
-            if e.returncode == 139:  # segfault
+            if e.returncode in [-11, 139]:  # segfault
                 docker_msg = ' in Docker' if docker_img else ''
                 print(f"❌ Failure (iteration {ii}/{n}): exit code {e.returncode} (segfault{docker_msg})")
                 log(f"{e}")
