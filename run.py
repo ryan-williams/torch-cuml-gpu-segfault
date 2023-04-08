@@ -89,7 +89,10 @@ def main(docker_img, repeat_in_process, n, quiet, random_seed, shape, exit_early
             log(f"Running: {shlex.join(cmd)}")
             check_call(cmd, **call_kwargs)
 
-        repeat(fn, **repeat_kwargs)
+        if docker_img and repeat_in_process:
+            fn()
+        else:
+            repeat(fn, **repeat_kwargs)
 
 
 if __name__ == '__main__':
