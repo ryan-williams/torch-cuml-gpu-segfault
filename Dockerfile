@@ -28,5 +28,6 @@ RUN mamba env update -n base -f environment.yml \
  && mamba clean -afy
 
 COPY neighbors.py neighbors.py
+COPY run.py run.py
 
 ENTRYPOINT [ "./neighbors.py" ]

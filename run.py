@@ -74,7 +74,7 @@ def main(docker_img, repeat_in_process, n, quiet, random_seed, shape, exit_early
                     '--entrypoint', "./run.py",
                     docker_img,
                     '-i',
-                    '-n', n,
+                    '-n', f'{n}',
                     *run_args,
                     *(['-x'] if exit_early else []),
                 ]
