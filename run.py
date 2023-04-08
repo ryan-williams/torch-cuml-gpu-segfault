@@ -49,14 +49,17 @@ def main(docker_img, repeat_in_process, n, quiet, random_seed, shape, exit_early
     log = (lambda msg: None) if quiet else print
 
     fail_msg = 'segfault in Docker' if docker_img else 'segfault'
+    repeat_kwargs = dict(
+        n=n,
+        log=log,
+        fail_msg=fail_msg,
+        exit_early=exit_early
+    )
     if repeat_in_process and not docker_img:
         from neighbors import run
         repeat(
             partial(run.callback, quiet=quiet, random_seed=random_seed, shape=shape),
-            n=n,
-            log=log,
-            fail_msg=fail_msg,
-            exit_early=exit_early
+            **repeat_kwargs
         )
     else:
         run_args = [
@@ -86,7 +89,7 @@ def main(docker_img, repeat_in_process, n, quiet, random_seed, shape, exit_early
             log(f"Running: {shlex.join(cmd)}")
             check_call(cmd, **call_kwargs)
 
-        repeat(fn, n=n, log=log, fail_msg=fail_msg, exit_early=exit_early)
+        repeat(fn, **repeat_kwargs)
 
 
 if __name__ == '__main__':

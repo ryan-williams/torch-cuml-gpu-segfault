@@ -11,6 +11,7 @@ import numpy as np
 def neighbors(X):
     # ⚠️️⚠️ This (theoretically unused) import, when run before the cuml import below it, causes the pipeline to segfault
     # on ≈10% of runs. ⚠️⚠️
+    import torch
 
     # This block is adapted from scanpy.neighbors.compute_neighbors_rapids:
     # https://github.com/scverse/scanpy/blob/1.8.2/scanpy/neighbors/__init__.py#L318-L338
