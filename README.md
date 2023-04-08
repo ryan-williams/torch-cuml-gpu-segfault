@@ -10,6 +10,8 @@ On AWS `p3.2xlarge` instances (with NVIDIA V100 GPUs), importing [PyTorch] is si
   - [Removing unused `import torch` fixes it](#import)
   - [Minimizing the example](#minimizing)
   - [Python `faulthandler` not working](#faulthandler)
+  - [Side-effectful `import torch` breaks with RAPIDS](#torch-vs-rapids)
+  - [Sensitivity calculations](#sensitivity)
 
 ## Reproduction steps <a id="repro"></a>
 
@@ -176,6 +178,20 @@ I've tried to reduce dependencies and update versions of what remains (see [`env
 
 ### Python `faulthandler` not working <a id="faulthandler"></a>
 I've tried to enable a more detailed stack trace from the segfault in a few places ([Dockerfile#L4](Dockerfile#L13), [neighbors.py#L7](neighbors.py#L6)), per [these instructions][segfault debug article], but have so far been unable to get any more info about where the segfault is occurring.
+
+### Side-effectful `import torch` breaks with RAPIDS <a id="torch-vs-rapids"></a>
+It would be good to understand what side effects `import torch` has, which cause it to sabotage subsequent cuml/RAPIDS execution (even when the imported `torch` is never used).
+
+In 2022 I ran into a similar issue (I believe with Torch 1.10 or 1.11, CUDA 11.4, and RAPIDS 21.x) where `import cuml; import torch` was fine by `import torch; import cuml` threw a linker error. It seems like there are some deep and brittle interactions between these libraries.
+
+### Sensitivity calculations <a id="sensitivity"></a>
+I settled on exercising `neighbors.py` 30x to determine whether a given repro candidate exhibits the segfault. My 10% estimate (of the how likely a given run is to segfault) has remained fairly accurate and stable as I reduced the repro by several orders of magnitude (in terms of lines of code, and overall complexity).
+
+The chance of a false positive (code falsely appears to work / not segfault) is 0.9^30 ≈ 4%.
+- In practice I believe I've run this 30x trial 100 times and only seen 1-2 such FPs (30 runs, no failures).
+- I ran it 400x once, and observed 42 failures with a maximum of 47 consecutive successes between two segfaults.
+
+Bumping the number of repetitions to e.g. 50 (`./run.py -n50`) can further reduce uncertainty; in the common case, the first segfault appears much earlier, allowing for short-circuiting or initiating a subsequent run.
 
 
 [`scanpy.preprocessing.neighbors`]: https://github.com/scverse/scanpy/blob/1.8.2/scanpy/neighbors/__init__.py#L52
