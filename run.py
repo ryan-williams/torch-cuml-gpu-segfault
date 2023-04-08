@@ -18,13 +18,13 @@ def repeat(fn, n, log=print, fail_msg='segfault', exit_early=False):
             print(f"✅ Success (iteration {ii}/{n})")
             successes += 1
         except CalledProcessError as e:
-            if e.returncode in [-11, 139]:  # segfault
+            if e.returncode in [-11, 139, 1]:  # segfault
                 print(f"❌ Failure (iteration {ii}/{n}): exit code {e.returncode} ({fail_msg})")
                 log(f"{e}")
                 if exit_early:
                     raise
                 failures += 1
-            elif e.returncode != 1:
+            else:
                 raise RuntimeError(f"Unexpected returncode {e.returncode}")
 
     if failures:
