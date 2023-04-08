@@ -7,6 +7,8 @@ faulthandler.enable()
 
 import numpy as np
 
+from decos import quiet_opt, random_seed_opt, shape_opt
+
 
 def neighbors(X):
     # ⚠️️⚠️ This (theoretically unused) import, when run before the cuml import below it, causes the pipeline to segfault
@@ -20,11 +22,6 @@ def neighbors(X):
     nn.fit(X_contiguous)
     knn_indices, knn_distances = nn.kneighbors(X_contiguous)
     print(f'knn_indices ({type(knn_indices)}, {knn_indices.shape}): {knn_indices.nonzero()}, knn_distances ({type(knn_distances)}, {knn_distances.shape}): {knn_distances.nonzero()}')
-
-
-quiet_opt = click.option('-q', '--quiet', is_flag=True, help='Suppress subprocess output, only print success/failure info for each iteration')
-random_seed_opt = click.option('-r', '--random-seed', default=123, type=int, help='Random seed (set before `cuml.NearestNeighbors` calculation)')
-shape_opt = click.option('-s', '--shape', default='10x2', help='Shape for random array passed to `cuml.NearestNeighbors`')
 
 
 @click.command()

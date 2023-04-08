@@ -6,7 +6,7 @@ from subprocess import check_call, DEVNULL, CalledProcessError
 
 import click
 
-from neighbors import run, quiet_opt, random_seed_opt, shape_opt
+from decos import quiet_opt, random_seed_opt, shape_opt
 
 
 def repeat(fn, n, log=print, fail_msg='segfault', exit_early=False):
@@ -52,6 +52,7 @@ def main(docker_img, repeat_in_process, n, quiet, random_seed, shape, exit_early
 
     fail_msg = 'segfault in Docker' if docker_img else 'segfault'
     if repeat_in_process and not docker_img:
+        from neighbors import run
         repeat(
             partial(run.callback, quiet=quiet, random_seed=random_seed, shape=shape),
             n=n,

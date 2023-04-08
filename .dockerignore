@@ -1,5 +1,6 @@
 # Only include files necessary for building and running the Docker image
 *
+!decos.py
 !environment.yml
 !neighbors.py
 !run.py
