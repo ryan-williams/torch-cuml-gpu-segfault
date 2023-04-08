@@ -76,7 +76,7 @@ def main(docker_img, repeat_in_process, n, quiet, random_seed, shape, exit_early
                     *(['-x'] if exit_early else []),
                 ]
             else:
-                cmd += [ docker_img ]
+                cmd += [ docker_img, *run_args ]
         else:
             cmd = ["./neighbors.py", *run_args]
 
