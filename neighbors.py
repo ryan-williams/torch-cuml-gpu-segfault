@@ -7,8 +7,6 @@ faulthandler.enable()
 
 import numpy as np
 
-from decos import quiet_opt, random_seed_opt, shape_opt
-
 
 def neighbors(X):
     # ⚠️️⚠️ This (theoretically unused) import, when run before the cuml import below it, causes the pipeline to segfault
@@ -25,9 +23,9 @@ def neighbors(X):
 
 
 @click.command()
-@quiet_opt
-@random_seed_opt
-@shape_opt
+@click.option('-q', '--quiet', is_flag=True, help='Suppress subprocess output, only print success/failure info for each iteration')
+@click.option('-r', '--random-seed', default=123, type=int, help='Random seed (set before `cuml.NearestNeighbors` calculation)')
+@click.option('-s', '--shape', default='10x2', help='Shape for random array passed to `cuml.NearestNeighbors`')
 def run(*, quiet, random_seed, shape):
     log = (lambda msg: None) if quiet else print
     np.random.seed(random_seed)

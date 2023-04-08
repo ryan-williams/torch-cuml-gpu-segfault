@@ -6,8 +6,6 @@ from subprocess import check_call, DEVNULL, CalledProcessError
 
 import click
 
-from decos import quiet_opt, random_seed_opt, shape_opt
-
 
 def repeat(fn, n, log=print, fail_msg='segfault', exit_early=False):
     fmt = f"%0{len(str(n))}d"
@@ -43,9 +41,9 @@ def repeat(fn, n, log=print, fail_msg='segfault', exit_early=False):
 @click.option('-i', '--repeat-in-process', is_flag=True, help='Repeat `cuml.NearestNeighbors` within one process (as opposed to each one in a separate Python subprocess invocation)')
 @click.option('-n', '--num-repetitions', 'n', default=30, help='Repeat `cuml.NearestNeighbors` this many times')
 @click.option('-q', '--quiet', is_flag=True, help='Suppress subprocess output, only print success/failure info for each iteration')
-@quiet_opt
-@random_seed_opt
-@shape_opt
+@click.option('-q', '--quiet', is_flag=True, help='Suppress subprocess output, only print success/failure info for each iteration')
+@click.option('-r', '--random-seed', default=123, type=int, help='Random seed (set before `cuml.NearestNeighbors` calculation)')
+@click.option('-s', '--shape', default='10x2', help='Shape for random array passed to `cuml.NearestNeighbors`')
 @click.option('-x', '--exit-early', is_flag=True, help='Exit on first failure')
 def main(docker_img, repeat_in_process, n, quiet, random_seed, shape, exit_early):
     log = (lambda msg: None) if quiet else print
