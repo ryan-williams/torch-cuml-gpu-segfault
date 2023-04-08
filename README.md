@@ -25,12 +25,18 @@ I've tested this on EC2 `p3.2xlarge` instances (with [an NVIDIA V100 GPU][p3 ins
   - Version 69.1 (`ami-058e8127e717f752b`)
 
 ### Create P3-class GPU instance <a id="create-instance"></a>
-- [cdk/] contains [CDK] scripts for launching a `p3.2xlarge` instance
-  - Uses [`ami-0a7de320e83dfd4ee`] ("Deep Learning AMI GPU PyTorch 1.13.1 (Amazon Linux 2) 20230310") by default
-  - Runs [`init-conda-env.sh`] on instance boot (make sure you [wait until that's done][cdk#async], on first log in)
-- [`instance.tf`] is an example Terraform template for doing similar
-  - Doesn't initialize the instance, see [instructions below](#setup-instance).
+See instructions below for launching a `p3.2xlarge` instance to reproduce the issue. Other GPU instance types may also exhibit the issue; I've only tested on `p3.2xlarge`s.
 
+#### Using [CDK]
+[cdk/] contains [CDK] scripts for launching a `p3.2xlarge` instance
+- Uses [`ami-0a7de320e83dfd4ee`] ("Deep Learning AMI GPU PyTorch 1.13.1 (Amazon Linux 2) 20230310") by default
+- Runs [`init-conda-env.sh`] on instance boot (make sure you [wait until that's done][cdk#async], on first log in)
+
+#### Using Terraform
+- [`instance.tf`] is an example Terraform template for launching a `p3.2xlarge` instance.
+- It doesn't initialize the instance, see [instructions below](#setup-instance).
+
+#### Requesting ≥8 vCPU quota for P3-class instances
 You may need to request a quota increase for P-class instance vCPUs, if you've never launched one:
 
 ```bash
@@ -41,8 +47,6 @@ aws service-quotas request-service-quota-increase \
 ```
 
 [This page](https://us-east-1.console.aws.amazon.com/servicequotas/home/services/ec2/quotas/L-417A185B) should also work.
-
-Other GPU instance types may also exhibit the issue; I've only tested on `p3.2xlarge`s.
 
 ### Setup GPU instance <a id="setup-instance"></a>
 On a `p3.2xlarge` GPU instance:
