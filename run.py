@@ -36,8 +36,8 @@ def repeat(fn, n, log=print, fail_msg='segfault', exit_early=False):
         sys.exit(0)
 
 
-@click.command('run.py', help='Repeatedly run `entrypoint.sh`, either in Docker on or the host')
-@click.option('-d', '--docker-img', help="Run this docker image (assumed to have been built from this repo, with ENTRYPOINT `entrypoint.sh`")
+@click.command('run.py', help='Repeatedly run `neighbors:run`, either in Docker on or the host')
+@click.option('-d', '--docker-img', help="Run `neighbors.py` inside the provided docker image (assumed to have been built from this repo)")
 @click.option('-i', '--repeat-in-process', is_flag=True, help='Repeat `cuml.NearestNeighbors` within one process (as opposed to each one in a separate Python subprocess invocation)')
 @click.option('-n', '--num-repetitions', 'n', default=30, help='Repeat `cuml.NearestNeighbors` this many times')
 @click.option('-q', '--quiet', is_flag=True, help='Suppress subprocess output, only print success/failure info for each iteration')

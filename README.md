@@ -44,7 +44,7 @@ time ./init-conda-env.sh  # update conda, create `segfault` conda env
 The [cdk/] template runs the commands above asynchronously during instance boot; use `tail -f /var/log/cloud-init-output.log` to see when it's done.
 
 ### Reproduce segfault on host <a id="host"></a>
-[`run.py`] runs [`pipeline.py`] repeatedly (via [`entrypoint.sh`]), and shows occasional (≈10%) segfaults:
+[`run.py`] runs [`neighbors.py`] repeatedly, and shows occasional (≈10%) segfaults:
 ```bash
 ./run.py -q
 # ✅ Success (iteration 01/30)
@@ -128,35 +128,35 @@ In this case, [`run.py`] repeatedly runs the Docker `$img` built above:
 ```
 
 ## Discussion <a id="discussion"></a>
-[The "pipeline" here](pipeline.py) has one non-empty step, `start`, which:
+[`neighbors.py`] performs the following steps:
 - Generates a 10x2 random matrix, `X`
 - Instantiates a [`cuml.neighbors.NearestNeighbors`] and fits it to `X`
 - Calls [`kneighbors`] on `X`
 
 ### Removing unused `import torch` fixes it <a id="import"></a>
-Something about [this `import torch`][`import torch`] is side-effectful, and creates a condition where some cleanup process seg-faults while the Python process is exiting. Presumably the data structures in question are instantiated by `cuml` (probably `cudf` DataFrames); if [the `nn.kneighbors` call](pipeline.py#L21-L22) is commented out, the segfault also goes away.
+Something about [this `import torch`][`import torch`] is side-effectful, and creates a condition where some cleanup process seg-faults while the Python process is exiting. Presumably the data structures in question are instantiated by `cuml` (probably `cudf` DataFrames); if [the `nn.kneighbors` call](neighbors.py#L22) is commented out, the segfault also goes away.
 
-If you remove [the unused `import torch` in pipeline.py][`import torch`], the segfaults go away:
+If you remove [the unused `import torch` in neighbors.py][`import torch`], the segfaults go away:
 ```python
 def neighbors(X):
-    # ⚠️️⚠️ This (theoretically unused) import, when run before the cuml import below it, causes the pipeline to segfault
-    # on ≈10% of runs. ⚠️⚠️
+    # ⚠️️⚠️ This (theoretically unused) import, when executed before the cuml import below it, leads to a segfault 
+    # (seemingly during Python process cleanup) on ≈10% of runs. ⚠️⚠️
     import torch
     from cuml.neighbors import NearestNeighbors
 ```
 
 ```bash
-perl -pi -e 's/import torch/# import torch/' pipeline.py
+perl -pi -e 's/import torch/# import torch/' neighbors.py
 python run.py  # ✅ now everything succeeds!
 ```
 
 ### Minimizing the example <a id="minimizing"></a>
-This is as minimal of a repro as I've found for this issue, which initially manifested during a call to [`scanpy.preprocessing.neighbors`] on larger, private data, during a (larger) [`Metaflow`] pipeline run.
+This is as minimal of a repro as I've found for this issue (which initially manifested in a [Metaflow] pipeline, during a call to [`scanpy.preprocessing.neighbors`], on larger, private data).
 
-I've tried to reduce dependencies and update versions of what remains (see [`environment.yml`]). I originally hit the issue with CUDA 11.6 and `cuml==22.06.01`, but the repro holds on CUDA 11.7 and `cuml==22.12.00`.
+I've tried to reduce dependencies and update versions of what remains (see [`environment.yml`]). I originally hit the issue with CUDA 11.6 and `cuml==22.06.01`, but the repro also occurs on CUDA 11.7 and `cuml==22.12.00`.
 
 ### Python `faulthandler` not working <a id="faulthandler"></a>
-I've tried to enable a more detailed stack trace from the segfault in a few places ([Dockerfile#L4](Dockerfile#L4), [entrypoint.sh#L4](entrypoint.sh#L4), [pipeline.py#L7](pipeline.py#L7)), per [these instructions][segfault debug article], but have so far been unable to get any more info about where it is occurring.
+I've tried to enable a more detailed stack trace from the segfault in a few places ([Dockerfile#L4](Dockerfile#L13), [neighbors.py#L7](neighbors.py#L6)), per [these instructions][segfault debug article], but have so far been unable to get any more info about where the segfault is occurring.
 
 
 [`scanpy.preprocessing.neighbors`]: https://github.com/scverse/scanpy/blob/1.8.2/scanpy/neighbors/__init__.py#L52
@@ -164,14 +164,11 @@ I've tried to enable a more detailed stack trace from the segfault in a few plac
 [`environment.yml`]: environment.yml
 [`cuml.neighbors.NearestNeighbors`]: https://github.com/rapidsai/cuml/blob/v22.06.01/python/cuml/neighbors/nearest_neighbors.pyx#L153
 [`kneighbors`]: https://github.com/rapidsai/cuml/blob/v22.06.01/python/cuml/neighbors/nearest_neighbors.pyx#L482
-[`import torch`]: pipeline.py#L14
-[pipeline.py]: pipeline.py
+[`import torch`]: neighbors.py#L14
 [segfault debug article]: https://blog.richard.do/2018/03/18/how-to-debug-segmentation-fault-in-python/
 [`run.py`]: run.py
-[`pipeline.py`]: pipeline.py
 [`instance.tf`]: instance.tf
 [`init-conda-env.sh`]: init-conda-env.sh
-[`entrypoint.sh`]: entrypoint.sh
 
 ["Deep Learning AMI (Amazon Linux 2)"]: https://docs.aws.amazon.com/dlami/latest/devguide/appendix-ami-release-notes.html
 [AWS Deep Learning AMI (Amazon Linux 2)]: https://aws.amazon.com/releasenotes/aws-deep-learning-ami-amazon-linux-2/
@@ -181,3 +178,5 @@ I've tried to enable a more detailed stack trace from the segfault in a few plac
 [p3 instances]: https://aws.amazon.com/ec2/instance-types/p3/
 [CDK]: https://aws.amazon.com/cdk/
 [cdk/]: cdk
+[`neighbors.py`]: neighbors.py
+[Metaflow]: https://metaflow.org/
