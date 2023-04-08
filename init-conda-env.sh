@@ -10,17 +10,6 @@ rm ~/miniconda.sh
 echo ". $d/etc/profile.d/conda.sh" >> ~/.bashrc
 . ~/.bashrc
 conda="$d/bin/conda"
-#"$conda" --version
-#echo "which conda: $(which conda)"
-#"$conda" init bash
-#"$conda" --version
-#echo "which conda: $(which conda)"
-#. ~/.bashrc
-#"$conda" --version
-#echo "which conda: $(which conda)"
-#"$conda" activate base
-#"$conda" --version
-#echo "which conda: $(which conda)"
 time "$conda" install -y -n base conda-libmamba-solver
 "$conda" config --set solver libmamba
 "$conda" config --set channel_priority flexible  # https://github.com/rapidsai/cuml/issues/4016
