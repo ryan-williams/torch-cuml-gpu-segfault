@@ -2,11 +2,8 @@
 import shlex
 import sys
 from subprocess import check_call, CalledProcessError, DEVNULL
-import faulthandler
 
 import click
-
-faulthandler.enable()
 
 
 @click.command('run.py', help='Repeatedly run `entrypoint.sh`, either in Docker on or the host')

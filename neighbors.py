@@ -1,4 +1,6 @@
 #!/usr/bin/env python
+import faulthandler
+faulthandler.enable()
 
 import numpy as np
 
