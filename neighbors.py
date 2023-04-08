@@ -1,42 +1,11 @@
 #!/usr/bin/env python
 import faulthandler
-import sys
-from subprocess import CalledProcessError
 
 import click
 
 faulthandler.enable()
 
 import numpy as np
-
-
-def repeat(fn, n, log=print, fail_msg='segfault', exit_early=False):
-    fmt = f"%0{len(str(n))}d"
-    successes, failures = 0, 0
-    for i in range(n):
-        ii = fmt % (i + 1)
-        log(f"Iteration {ii}/{n}")
-        try:
-            fn()
-            print(f"✅ Success (iteration {ii}/{n})")
-            successes += 1
-        except CalledProcessError as e:
-            if e.returncode in [-11, 139]:  # segfault
-                print(f"❌ Failure (iteration {ii}/{n}): exit code {e.returncode} ({fail_msg})")
-                log(f"{e}")
-                if exit_early:
-                    raise
-                failures += 1
-            elif e.returncode != 1:
-                raise RuntimeError(f"Unexpected returncode {e.returncode}")
-
-    if failures:
-        pct_str = "%.1f" % (failures / n * 100)
-        print(f"❌ {failures}/{n} runs failed ({pct_str}%)")
-        sys.exit(1)
-    else:
-        print(f"✅ all {successes} runs succeeded")
-        sys.exit(0)
 
 
 def neighbors(X):
