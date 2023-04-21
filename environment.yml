@@ -4,8 +4,8 @@ channels:
   - nvidia
   - conda-forge
 dependencies:
-  - python==3.9.13
-  - cuml==22.12.00[build=cuda11_py39*]
+  - python=3.8
+  - cuml==23.04.00[build=cuda11_py38*]
   - numpy==1.23.5
   - pytorch==1.13.1
   - pip
