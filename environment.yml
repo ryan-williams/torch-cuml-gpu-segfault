@@ -7,7 +7,7 @@ dependencies:
   - python=3.9
   - cuml==22.12.00[build=cuda11_py39*]
   - numpy==1.23.5
-  - pytorch==2.0.0[build=py3.9_cuda11.7*]
+  - pytorch==1.13.1[build=py3.9_cuda11.6*]
   - pip
   - pip:
     - click
