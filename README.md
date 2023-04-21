@@ -1,5 +1,5 @@
 # Unused `import torch` causes nondeterministic segfault when using [`cuml`]
-Importing [PyTorch] is side-effectful, and causes a segfault after `cuml.NearestNeighbors` execution (≈10% of the time, apparently during Python process cleanup). This is also filed as [rapidsai/cuml#5343](https://github.com/rapidsai/cuml/issues/5343).
+Importing [PyTorch] is side-effectful, and causes a segfault after `cuml.NearestNeighbors` execution (≈10% of the time, apparently during Python process cleanup). This is also filed as [rapidsai/cuml#5343](https://github.com/rapidsai/cuml/issues/5343) and [pytorch#99200](https://github.com/pytorch/pytorch/issues/99200).
 
 - [Reproduction steps](#repro)
   - [Create P3-class GPU instance](#create-instance)
